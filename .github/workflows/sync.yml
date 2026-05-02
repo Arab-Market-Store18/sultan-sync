@@ -11,27 +11,24 @@ jobs:
 
       - name: Prepare and Download
         run: |
-          mkdir -p models/swap models/insightface/models/buffalo_l models/gfpgan models/codeformer models/detection
-
-          # استخدام --continue و --tries لضمان استمرار التحميل حتى لو فشل رابط واحد
-          wget -q --show-progress --continue --tries=3 -O models/swap/inswapper_128.onnx https://huggingface.co/ezioruan/inswapper_128.onnx/resolve/main/inswapper_128.onnx || true
-          wget -q --show-progress --continue --tries=3 -O models/insightface/models/buffalo_l/det_10g.onnx https://huggingface.co/MonsterMMORPG/SECourses/resolve/main/det_10g.onnx || true
-          wget -q --show-progress --continue --tries=3 -O models/insightface/models/buffalo_l/w600k_r50.onnx https://huggingface.co/MonsterMMORPG/SECourses/resolve/main/w600k_r50.onnx || true
-          wget -q --show-progress --continue --tries=3 -O models/gfpgan/GFPGANv1.4.pth https://huggingface.co/public-data/face-upscale/resolve/main/GFPGANv1.4.pth || true
-          wget -q --show-progress --continue --tries=3 -O models/codeformer/codeformer.pth https://huggingface.co/sczhou/CodeFormer/resolve/main/CodeFormer.pth || true
+          mkdir -p models/swap models/insightface/models/buffalo_l
+          wget -q -O models/swap/inswapper_128.onnx https://huggingface.co/ezioruan/inswapper_128.onnx/resolve/main/inswapper_128.onnx || true
+          wget -q -O models/insightface/models/buffalo_l/det_10g.onnx https://huggingface.co/MonsterMMORPG/SECourses/resolve/main/det_10g.onnx || true
 
       - name: Push to Hugging Face
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          # تسجيل الدخول أولاً باستخدام سطر الأوامر لتفادي أخطاء البرمجية
+          huggingface-cli login --token $HF_TOKEN --add-to-git-credential
+          
+          # الرفع باستخدام بايثون مع التأكد من قراءة المتغير البيئي مباشرة
           python -c "
-          from huggingface_hub import HfApi
           import os
+          from huggingface_hub import HfApi
           api = HfApi()
-          # سيتم رفع الملفات الموجودة فقط وتجاهل الروابط التي فشلت
           api.upload_folder(
               folder_path='models',
               repo_id='shababdd11/sultan-models',
-              repo_type='model',
-              token=os.environ['HF_TOKEN']
+              repo_type='model'
           )"
