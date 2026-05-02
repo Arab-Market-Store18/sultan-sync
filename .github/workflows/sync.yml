@@ -1,4 +1,4 @@
-name: Sultan Test - Official Download
+name: Sultan Test - New HF Tool
 on:
   workflow_dispatch:
 
@@ -7,9 +7,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install Tools
-        run: pip install huggingface_hub
+        run: pip install huggingface_hub # لضمان وجود المكتبة البرمجية
 
-      - name: Download Using Official API
+      - name: Download Using New HF Command
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
@@ -18,8 +18,8 @@ jobs:
           # إنشاء المجلد
           mkdir -p models/insightface/models/buffalo_l
           
-          # التحميل باستخدام الأداة الرسمية (هذا لا يعطي Exit Code 8)
-          huggingface-cli download MonsterMMORPG/SECourses det_10g.onnx --local-dir models/insightface/models/buffalo_l --local-dir-use-symlinks False
+          # الصيغة الجديدة والمباشرة التي طلبها منك النظام في السجل
+          hf download MonsterMMORPG/SECourses det_10g.onnx --local-dir models/insightface/models/buffalo_l
 
-          # الرفع
+          # الرفع النهائي
           hf upload shababdd11/sultan-models ./models . --repo-type model
