@@ -1,4 +1,4 @@
-name: Sultan Verified Final
+name: Sultan Full Sync - THE WHOLE STACK
 on:
   workflow_dispatch:
 
@@ -9,15 +9,25 @@ jobs:
       - name: Install Tools
         run: pip install -U huggingface_hub
 
-      - name: Verified Download from Source
+      - name: Force Download of ALL Models
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           hf auth login --token $HF_TOKEN
           
-          # التحميل باستخدام المسار الذي أكدته التقارير الآن
-          # سنحمل مجلد buffalo_l بالكامل لضمان عدم ضياع أي ملف
+          # إنشاء المجلدات الأساسية
+          mkdir -p models/insightface/models/buffalo_l
+          mkdir -p models/swap
+          mkdir -p models/recognition
+          
+          # 1. تحميل حزمة buffalo_l كاملة (التي نجحت للتو)
           hf download public-data/insightface --include "models/buffalo_l/*" --local-dir ./models/insightface
 
-          # الرفع النهائي لمستودعك
+          # 2. تحميل ملف الـ Swap الشهير (inswapper_128.onnx) - مسار موثق 2026
+          hf download shababdd11/sultan-models inswapper_128.onnx --local-dir ./models/swap --repo-type model
+
+          # 3. تحميل ملف الـ Recognition (arcface.onnx)
+          hf download public-data/insightface models/buffalo_l/w600k_r50.onnx --local-dir ./models/recognition
+
+          # الرفع النهائي الشامل
           hf upload shababdd11/sultan-models ./models . --repo-type model
