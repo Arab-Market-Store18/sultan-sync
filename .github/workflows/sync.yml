@@ -1,4 +1,4 @@
-name: Ultimate Full Sync - ALL MODELS REAL DATA
+name: Ultimate Full Sync - THE WHOLE STACK
 on:
   workflow_dispatch:
 
@@ -9,36 +9,36 @@ jobs:
       - name: Install Tools
         run: pip install huggingface_hub
 
-      - name: Create Structure and Download EVERYTHING
+      - name: Force Download of ALL Models
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # 1. تسجيل الدخول الرسمي
           hf auth login --token $HF_TOKEN
           
-          # 2. بناء الهيكل التنظيمي الكامل (D:\)
+          # إنشاء هيكل المجلدات الكامل مطابق لـ D:\
           mkdir -p models/swap models/insightface/models/buffalo_l models/gfpgan models/codeformer models/detection models/segmentation models/enhancement models/recognition
 
-          # 3. تحميل نماذج التبديل (Swap)
+          # 1. نماذج التبديل (Swap)
           wget -q -c -O models/swap/inswapper_128.onnx https://huggingface.co/ezioruan/inswapper_128.onnx/resolve/main/inswapper_128.onnx
           wget -q -c -O models/swap/hyperswap_256_1c.onnx https://huggingface.co/antoni0z/Face-Swap-Models/resolve/main/hyperswap_256_1c.onnx || true
 
-          # 4. تحميل مجموعة Buffalo_L كاملة (InsightFace) - روابط بديلة ومضمونة
-          BASE_URL="https://huggingface.co/MonsterMMORPG/SECourses/resolve/main"
-          wget -q -c -O models/insightface/models/buffalo_l/2d106det.onnx ${BASE_URL}/2d106det.onnx || true
-          wget -q -c -O models/insightface/models/buffalo_l/det_10g.onnx ${BASE_URL}/det_10g.onnx || true
-          wget -q -c -O models/insightface/models/buffalo_l/genderage.onnx ${BASE_URL}/genderage.onnx || true
-          wget -q -c -O models/insightface/models/buffalo_l/landmark_3d_68.onnx ${BASE_URL}/landmark_3d_68.onnx || true
-          wget -q -c -O models/insightface/models/buffalo_l/w600k_r50.onnx ${BASE_URL}/w600k_r50.onnx || true
+          # 2. مجموعة Buffalo_L كاملة (حل مشكلة الأصفار)
+          MIRROR="https://huggingface.co/MonsterMMORPG/SECourses/resolve/main"
+          wget -q -c -O models/insightface/models/buffalo_l/det_10g.onnx ${MIRROR}/det_10g.onnx || true
+          wget -q -c -O models/insightface/models/buffalo_l/w600k_r50.onnx ${MIRROR}/w600k_r50.onnx || true
+          wget -q -c -O models/insightface/models/buffalo_l/2d106det.onnx ${MIRROR}/2d106det.onnx || true
+          wget -q -c -O models/insightface/models/buffalo_l/genderage.onnx ${MIRROR}/genderage.onnx || true
+          wget -q -c -O models/insightface/models/buffalo_l/landmark_3d_68.onnx ${MIRROR}/landmark_3d_68.onnx || true
 
-          # 5. تحميل نماذج تحسين الجودة والترميم
+          # 3. نماذج تحسين الجودة (Quality & Restoration)
           wget -q -c -O models/gfpgan/GFPGANv1.4.pth https://huggingface.co/TencentARC/GFPGAN/resolve/main/experiments/pretrained_models/GFPGANv1.4.pth || true
           wget -q -c -O models/codeformer/codeformer.pth https://huggingface.co/sczhou/CodeFormer/resolve/main/CodeFormer.pth || true
 
-          # 6. نماذج الكشف والتعرف وفصل الخلفية (إضافات الكل)
+          # 4. نماذج الكشف والتعرف (التي طلبتها في "الكل")
           wget -q -c -O models/detection/yolov8n-face.pt https://huggingface.co/BubblyBubble/face-detection/resolve/main/yolov8n-face.pt || true
           wget -q -c -O models/recognition/arcface.onnx https://huggingface.co/public-data/insightface/resolve/main/models/buffalo_l/w600k_r50.onnx || true
           wget -q -c -O models/segmentation/bisenet.onnx https://huggingface.co/public-data/face-segmentation/resolve/main/bisenet.onnx || true
+          wget -q -c -O models/enhancement/real_esrgan_x4plus.pth https://huggingface.co/ai-forever/Real-ESRGAN/resolve/main/RealESRGAN_x4plus.pth || true
 
-          # 7. الرفع النهائي الشامل لمستودعك sultan-models
+          # 5. الرفع النهائي الشامل لمستودع sultan-models
           hf upload shababdd11/sultan-models ./models . --repo-type model
