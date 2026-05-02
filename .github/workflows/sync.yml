@@ -1,0 +1,37 @@
+name: Full Cloud Sync
+on:
+  workflow_dispatch: # لتفعيل زر التشغيل اليدوي
+
+jobs:
+  transfer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Tools
+        run: pip install huggingface_hub
+
+      - name: Prepare and Download
+        run: |
+          # إنشاء مجلدات النماذج
+          mkdir -p models/swap models/insightface/models/buffalo_l models/gfpgan models/codeformer models/detection
+
+          # سحب النماذج سحابياً (بدون استهلاك إنترنت جهازك)
+          wget -q -O models/swap/inswapper_128.onnx https://huggingface.co/ezioruan/inswapper_128.onnx/resolve/main/inswapper_128.onnx
+          wget -q -O models/insightface/models/buffalo_l/det_10g.onnx https://huggingface.co/MonsterMMORPG/SECourses/resolve/main/det_10g.onnx
+          wget -q -O models/insightface/models/buffalo_l/w600k_r50.onnx https://huggingface.co/MonsterMMORPG/SECourses/resolve/main/w600k_r50.onnx
+          wget -q -O models/gfpgan/GFPGANv1.4.pth https://huggingface.co/public-data/face-upscale/resolve/main/GFPGANv1.4.pth
+          wget -q -O models/codeformer/codeformer.pth https://huggingface.co/sczhou/CodeFormer/resolve/main/CodeFormer.pth
+
+      - name: Push to Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python -c "
+          from huggingface_hub import HfApi
+          api = HfApi()
+          # تأكد من اسم حسابك في HF ومستودع sultan-models
+          api.upload_folder(
+              folder_path='models',
+              repo_id='shababdd11/sultan-models',
+              repo_type='model',
+              token='${{ secrets.HF_TOKEN }}'
+          )"
