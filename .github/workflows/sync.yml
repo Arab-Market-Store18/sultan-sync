@@ -1,4 +1,4 @@
-name: Ultimate Full Sync - THE WHOLE STACK
+name: Sultan Test - Break 729MB
 on:
   workflow_dispatch:
 
@@ -9,36 +9,18 @@ jobs:
       - name: Install Tools
         run: pip install huggingface_hub
 
-      - name: Force Download of ALL Models
+      - name: Download One Real File
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           hf auth login --token $HF_TOKEN
           
-          # إنشاء هيكل المجلدات الكامل مطابق لـ D:\
-          mkdir -p models/swap models/insightface/models/buffalo_l models/gfpgan models/codeformer models/detection models/segmentation models/enhancement models/recognition
+          # إنشاء المجلد المطلوب
+          mkdir -p models/insightface/models/buffalo_l
+          
+          # تحميل ملف واحد فقط (حجمه حوالي 227MB) برابط مباشر
+          # هذا الرابط سيسحب بيانات حقيقية وليس صفحة ويب
+          wget -q -c -O models/insightface/models/buffalo_l/det_10g.onnx https://huggingface.co/MonsterMMORPG/SECourses/resolve/main/det_10g.onnx
 
-          # 1. نماذج التبديل (Swap)
-          wget -q -c -O models/swap/inswapper_128.onnx https://huggingface.co/ezioruan/inswapper_128.onnx/resolve/main/inswapper_128.onnx
-          wget -q -c -O models/swap/hyperswap_256_1c.onnx https://huggingface.co/antoni0z/Face-Swap-Models/resolve/main/hyperswap_256_1c.onnx || true
-
-          # 2. مجموعة Buffalo_L كاملة (حل مشكلة الأصفار)
-          MIRROR="https://huggingface.co/MonsterMMORPG/SECourses/resolve/main"
-          wget -q -c -O models/insightface/models/buffalo_l/det_10g.onnx ${MIRROR}/det_10g.onnx || true
-          wget -q -c -O models/insightface/models/buffalo_l/w600k_r50.onnx ${MIRROR}/w600k_r50.onnx || true
-          wget -q -c -O models/insightface/models/buffalo_l/2d106det.onnx ${MIRROR}/2d106det.onnx || true
-          wget -q -c -O models/insightface/models/buffalo_l/genderage.onnx ${MIRROR}/genderage.onnx || true
-          wget -q -c -O models/insightface/models/buffalo_l/landmark_3d_68.onnx ${MIRROR}/landmark_3d_68.onnx || true
-
-          # 3. نماذج تحسين الجودة (Quality & Restoration)
-          wget -q -c -O models/gfpgan/GFPGANv1.4.pth https://huggingface.co/TencentARC/GFPGAN/resolve/main/experiments/pretrained_models/GFPGANv1.4.pth || true
-          wget -q -c -O models/codeformer/codeformer.pth https://huggingface.co/sczhou/CodeFormer/resolve/main/CodeFormer.pth || true
-
-          # 4. نماذج الكشف والتعرف (التي طلبتها في "الكل")
-          wget -q -c -O models/detection/yolov8n-face.pt https://huggingface.co/BubblyBubble/face-detection/resolve/main/yolov8n-face.pt || true
-          wget -q -c -O models/recognition/arcface.onnx https://huggingface.co/public-data/insightface/resolve/main/models/buffalo_l/w600k_r50.onnx || true
-          wget -q -c -O models/segmentation/bisenet.onnx https://huggingface.co/public-data/face-segmentation/resolve/main/bisenet.onnx || true
-          wget -q -c -O models/enhancement/real_esrgan_x4plus.pth https://huggingface.co/ai-forever/Real-ESRGAN/resolve/main/RealESRGAN_x4plus.pth || true
-
-          # 5. الرفع النهائي الشامل لمستودع sultan-models
+          # رفع الملف وتحديث الأصفار
           hf upload shababdd11/sultan-models ./models . --repo-type model
