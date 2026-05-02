@@ -1,33 +1,48 @@
-name: Sultan Full Sync - THE WHOLE STACK
-on:
-  workflow_dispatch:
+import os
+from huggingface_hub import hf_hub_download, HfApi
 
-jobs:
-  transfer:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install Tools
-        run: pip install -U huggingface_hub
+# إعدادات مستودعك
+repo_id = "shababdd11/sultan-models" 
+token = "ضع_هنا_التوكن_الخاص_بك"
 
-      - name: Force Download of ALL Models
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: |
-          hf auth login --token $HF_TOKEN
-          
-          # إنشاء المجلدات الأساسية
-          mkdir -p models/insightface/models/buffalo_l
-          mkdir -p models/swap
-          mkdir -p models/recognition
-          
-          # 1. تحميل حزمة buffalo_l كاملة (التي نجحت للتو)
-          hf download public-data/insightface --include "models/buffalo_l/*" --local-dir ./models/insightface
+api = HfApi()
 
-          # 2. تحميل ملف الـ Swap الشهير (inswapper_128.onnx) - مسار موثق 2026
-          hf download shababdd11/sultan-models inswapper_128.onnx --local-dir ./models/swap --repo-type model
+# قائمة الملفات بناءً على "المواقع الحقيقية" المستخلصة من البحث
+files_to_process = [
+    # إصلاح Buffalo_L
+    {"src": "public-data/insightface", "file": "models/buffalo_l/scrfd_10g_bnkps.onnx", "target": "insightface/models/buffalo_l/scrfd_10g_bnkps.onnx"},
+    {"src": "public-data/insightface", "file": "models/buffalo_l/landmark_3d_68.onnx", "target": "insightface/models/buffalo_l/landmark_3d_68.onnx"},
+    
+    # إصلاح نماذج التبديل
+    {"src": "ezioruan/inswapper_128", "file": "hyperswap_256_1c.onnx", "target": "swap/hyperswap_256_1c.onnx"},
+    
+    # تحسين الجودة
+    {"src": "sczhou/CodeFormer", "file": "CodeFormer.pth", "target": "codeformer/codeformer.pth"},
+    {"src": "akhaliq/GFPGAN", "file": "GFPGANv1.4.pth", "target": "gfpgan/GFPGANv1.4.pth"},
+    {"src": "sberbank-ai/Real-ESRGAN", "file": "RealESRGAN_x4plus.pth", "target": "enhancement/real_esrgan_x4plus.pth"},
+    
+    # الكشف والتعرف
+    {"src": "isat-ai/yolov8-face", "file": "yolov8n-face.pt", "target": "detection/yolov8n-face.pt"},
+    {"src": "public-data/insightface", "file": "models/buffalo_l/det_10g.onnx", "target": "recognition/arcface.onnx"}
+]
 
-          # 3. تحميل ملف الـ Recognition (arcface.onnx)
-          hf download public-data/insightface models/buffalo_l/w600k_r50.onnx --local-dir ./models/recognition
+def run_sync():
+    for item in files_to_process:
+        try:
+            print(f"جاري سحب {item['file']} من الموقع الحقيقي...")
+            # التحميل من المصدر الموثق
+            downloaded_path = hf_hub_download(repo_id=item['src'], filename=item['file'])
+            
+            # الرفع لمستودعك (إصلاح النواقص)
+            api.upload_file(
+                path_or_fileobj=downloaded_path,
+                path_in_repo=item['target'],
+                repo_id=repo_id,
+                token=token
+            )
+            print(f"✅ تم إصلاح ورفع: {item['target']}")
+        except Exception as e:
+            print(f"❌ تعذر جلب {item['file']}: {e}")
 
-          # الرفع النهائي الشامل
-          hf upload shababdd11/sultan-models ./models . --repo-type model
+if __name__ == "__main__":
+    run_sync()
