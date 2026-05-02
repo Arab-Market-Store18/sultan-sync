@@ -1,4 +1,4 @@
-name: Ultimate Model Sync - THE FULL STACK
+name: Full Cloud Sync - REAL DATA
 on:
   workflow_dispatch:
 
@@ -9,48 +9,30 @@ jobs:
       - name: Install Tools
         run: pip install huggingface_hub
 
-      - name: Create Structure and Download All
-        run: |
-          # إنشاء الهيكل الكامل (D:\)
-          mkdir -p models/swap models/insightface/models/buffalo_l models/gfpgan models/codeformer models/detection models/segmentation models/enhancement models/recognition
-
-          # 1. نماذج التبديل (Swap)
-          wget -q -O models/swap/inswapper_128.onnx https://huggingface.co/ezioruan/inswapper_128.onnx/resolve/main/inswapper_128.onnx || true
-          wget -q -O models/swap/hyperswap_256_1c.onnx https://huggingface.co/public-data/face-swap/resolve/main/hyperswap_256_1c.onnx || true
-
-          # 2. مجموعة Buffalo_L (InsightFace) - روابط مباشرة ومضمونة
-          BASE_URL="https://huggingface.co/public-data/insightface/resolve/main/models/buffalo_l"
-          wget -q -O models/insightface/models/buffalo_l/2d106det.onnx ${BASE_URL}/2d106det.onnx || true
-          wget -q -O models/insightface/models/buffalo_l/det_10g.onnx ${BASE_URL}/det_10g.onnx || true
-          wget -q -O models/insightface/models/buffalo_l/genderage.onnx ${BASE_URL}/genderage.onnx || true
-          wget -q -O models/insightface/models/buffalo_l/landmark_3d_68.onnx ${BASE_URL}/landmark_3d_68.onnx || true
-          wget -q -O models/insightface/models/buffalo_l/w600k_r50.onnx ${BASE_URL}/w600k_r50.onnx || true
-
-          # 3. تحسين الجودة (GFPGAN & CodeFormer)
-          wget -q -O models/gfpgan/GFPGANv1.4.pth https://huggingface.co/public-data/face-upscale/resolve/main/GFPGANv1.4.pth || true
-          wget -q -O models/codeformer/codeformer.pth https://huggingface.co/sczhou/CodeFormer/resolve/main/CodeFormer.pth || true
-
-          # 4. نماذج الكشف الإضافية (Detection)
-          wget -q -O models/detection/yolov5s.pt https://huggingface.co/public-data/face-detection/resolve/main/yolov5s.pt || true
-          wget -q -O models/detection/yolov8n-face.pt https://huggingface.co/public-data/face-detection/resolve/main/yolov8n-face.pt || true
-          wget -q -O models/detection/retinaface.onnx https://huggingface.co/public-data/face-detection/resolve/main/retinaface.onnx || true
-
-          # 5. فصل الخلفية (Segmentation)
-          wget -q -O models/segmentation/unet.onnx https://huggingface.co/public-data/face-segmentation/resolve/main/unet.onnx || true
-          wget -q -O models/segmentation/bisenet.onnx https://huggingface.co/public-data/face-segmentation/resolve/main/bisenet.onnx || true
-
-          # 6. تحسين إضافي (Enhancement)
-          wget -q -O models/enhancement/real_esrgan_x4plus.pth https://huggingface.co/public-data/face-upscale/resolve/main/RealESRGAN_x4plus.pth || true
-          wget -q -O models/enhancement/real_esrgan_x2plus.pth https://huggingface.co/public-data/face-upscale/resolve/main/RealESRGAN_x2plus.pth || true
-
-          # 7. التعرف على الوجوه (Recognition)
-          wget -q -O models/recognition/facenet.onnx https://huggingface.co/public-data/face-recognition/resolve/main/facenet.onnx || true
-          wget -q -O models/recognition/arcface.onnx https://huggingface.co/public-data/face-recognition/resolve/main/arcface.onnx || true
-
-      - name: Push Everything to Hugging Face
+      - name: Download and Push ALL Models
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           hf auth login --token $HF_TOKEN
-          # رفع المجلد الرئيسي بكل ما فيه ليطابق حساب shababdd11
+          
+          # 1. إنشاء الهيكل الكامل
+          mkdir -p models/swap models/insightface/models/buffalo_l models/gfpgan models/codeformer models/detection models/segmentation models/enhancement models/recognition
+
+          # 2. تحميل نماذج التبديل (Swap) - أحجام حقيقية
+          hf download ezioruan/inswapper_128.onnx inswapper_128.onnx --local-dir models/swap
+          hf download public-data/face-swap hyperswap_256_1c.onnx --local-dir models/swap || true
+
+          # 3. تحميل مجموعة Buffalo_L كاملة (InsightFace) - لإنهاء مشكلة الـ 0 Bytes
+          # سيسحب الملفات: det_10g, w600k_r50, 2d106det, genderage, landmark_3d_68
+          hf download deepinsight/insightface --local-dir models/insightface --repo-type dataset || true
+
+          # 4. تحميل نماذج التحسين (Quality)
+          hf download sczhou/CodeFormer codeformer.pth --local-dir models/codeformer
+          hf download public-data/face-upscale GFPGANv1.4.pth --local-dir models/gfpgan || true
+
+          # 5. تحميل نماذج الكشف والتعرف (Detection & Recognition)
+          hf download public-data/face-detection yolov5s.pt yolov8n-face.pt retinaface.onnx --local-dir models/detection || true
+          hf download public-data/face-recognition facenet.onnx arcface.onnx --local-dir models/recognition || true
+
+          # 6. الرفع النهائي الشامل لمستودع sultan-models
           hf upload shababdd11/sultan-models ./models . --repo-type model
