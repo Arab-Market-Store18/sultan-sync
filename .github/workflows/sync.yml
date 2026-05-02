@@ -19,16 +19,8 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # تسجيل الدخول أولاً باستخدام سطر الأوامر لتفادي أخطاء البرمجية
-          huggingface-cli login --token $HF_TOKEN --add-to-git-credential
+          # استخدام الأداة الجديدة hf لتسجيل الدخول
+          hf auth login --token $HF_TOKEN
           
-          # الرفع باستخدام بايثون مع التأكد من قراءة المتغير البيئي مباشرة
-          python -c "
-          import os
-          from huggingface_hub import HfApi
-          api = HfApi()
-          api.upload_folder(
-              folder_path='models',
-              repo_id='shababdd11/sultan-models',
-              repo_type='model'
-          )"
+          # استخدام hf upload لرفع المجلد مباشرة بطريقة سحابية سريعة
+          hf upload shababdd11/sultan-models ./models . --repo-type model
