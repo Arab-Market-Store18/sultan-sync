@@ -1,4 +1,4 @@
-name: Sultan Test - Fixed Path
+name: Sultan Final Verified - May 2026
 on:
   workflow_dispatch:
 
@@ -7,22 +7,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install Tools
-        run: pip install huggingface_hub
+        run: pip install -U "huggingface_hub" # تحديث للأداة الأحدث
 
-      - name: Download From Exact Path
+      - name: Verified Download
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           hf auth login --token $HF_TOKEN
           
-          # إنشاء المجلد المحلي في جهاز GitHub
-          mkdir -p models/insightface/models/buffalo_l
-          
-          # التحميل مع تحديد المسار الصحيح داخل المستودع (include)
-          hf download MonsterMMORPG/SECourses \
-            --include "models/insightface/models/buffalo_l/det_10g.onnx" \
-            --local-dir . \
-            --local-dir-use-symlinks False
+          # التحميل بالصيغة المختصرة والرسمية (لا تستخدم --include لملف واحد)
+          # هكذا يطلبها النظام الآن: hf download [repo] [filename] --local-dir [path]
+          hf download MonsterMMORPG/SECourses models/insightface/models/buffalo_l/det_10g.onnx --local-dir ./models
 
           # الرفع النهائي
           hf upload shababdd11/sultan-models ./models . --repo-type model
