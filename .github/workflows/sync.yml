@@ -1,4 +1,4 @@
-name: Sultan Test - Simplified Path
+name: Sultan Verified Final
 on:
   workflow_dispatch:
 
@@ -9,15 +9,15 @@ jobs:
       - name: Install Tools
         run: pip install -U huggingface_hub
 
-      - name: Download Single File Correctly
+      - name: Verified Download from Source
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           hf auth login --token $HF_TOKEN
           
-          # سنقوم بتحميل الملف من مستودع يحتوي عليه في الصفحة الرئيسية مباشرة لتجنب خطأ "File not found"
-          # سنستخدم مستودع 'sultan/insightface-models' إذا كان متاحاً أو أي مستودع بسيط
-          hf download sultan/insightface-models det_10g.onnx --local-dir ./models/insightface/models/buffalo_l
+          # التحميل باستخدام المسار الذي أكدته التقارير الآن
+          # سنحمل مجلد buffalo_l بالكامل لضمان عدم ضياع أي ملف
+          hf download public-data/insightface --include "models/buffalo_l/*" --local-dir ./models/insightface
 
-          # الرفع النهائي
+          # الرفع النهائي لمستودعك
           hf upload shababdd11/sultan-models ./models . --repo-type model
