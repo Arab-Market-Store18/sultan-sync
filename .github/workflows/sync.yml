@@ -1,4 +1,4 @@
-name: Sultan Test - Break 729MB
+name: Sultan Test - Official Download
 on:
   workflow_dispatch:
 
@@ -9,18 +9,17 @@ jobs:
       - name: Install Tools
         run: pip install huggingface_hub
 
-      - name: Download One Real File
+      - name: Download Using Official API
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           hf auth login --token $HF_TOKEN
           
-          # إنشاء المجلد المطلوب
+          # إنشاء المجلد
           mkdir -p models/insightface/models/buffalo_l
           
-          # تحميل ملف واحد فقط (حجمه حوالي 227MB) برابط مباشر
-          # هذا الرابط سيسحب بيانات حقيقية وليس صفحة ويب
-          wget -q -c -O models/insightface/models/buffalo_l/det_10g.onnx https://huggingface.co/MonsterMMORPG/SECourses/resolve/main/det_10g.onnx
+          # التحميل باستخدام الأداة الرسمية (هذا لا يعطي Exit Code 8)
+          huggingface-cli download MonsterMMORPG/SECourses det_10g.onnx --local-dir models/insightface/models/buffalo_l --local-dir-use-symlinks False
 
-          # رفع الملف وتحديث الأصفار
+          # الرفع
           hf upload shababdd11/sultan-models ./models . --repo-type model
