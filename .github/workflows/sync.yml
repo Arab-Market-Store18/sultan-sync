@@ -12,10 +12,11 @@ jobs:
         run: |
           mkdir -p segmentation
           
-          wget --show-progress https://huggingface.co/facefusion/models/resolve/main/bisenet.onnx -O segmentation/bisenet.onnx
+          # تحميل مع التوثيق
+          wget --header="Authorization: Bearer ${HF_TOKEN}" --show-progress https://huggingface.co/facefusion/models/resolve/main/bisenet.onnx -O segmentation/bisenet.onnx
           echo "✅ bisenet: $(ls -lh segmentation/bisenet.onnx | awk '{print $5}')"
           
-          wget --show-progress https://huggingface.co/facefusion/models/resolve/main/unet.onnx -O segmentation/unet.onnx
+          wget --header="Authorization: Bearer ${HF_TOKEN}" --show-progress https://huggingface.co/facefusion/models/resolve/main/unet.onnx -O segmentation/unet.onnx
           echo "✅ unet: $(ls -lh segmentation/unet.onnx | awk '{print $5}')"
           
           pip install -q huggingface_hub
