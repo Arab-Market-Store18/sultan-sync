@@ -1,4 +1,4 @@
-name: Upload real_esrgan_x4plus
+name: Upload real_esrgan_x2plus
 on:
   workflow_dispatch:
 
@@ -11,16 +11,16 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           pip install -q huggingface_hub
-          wget -q https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth
-          echo "✅ Downloaded: $(ls -lh RealESRGAN_x4plus.pth | awk '{print $5}')"
+          wget -q https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.1/RealESRGAN_x2plus.pth
+          echo "✅ Downloaded: $(ls -lh RealESRGAN_x2plus.pth | awk '{print $5}')"
           
           python3 << 'EOF'
           import os
           from huggingface_hub import HfApi
           api = HfApi(token=os.environ["HF_TOKEN"])
           api.upload_file(
-              path_or_fileobj="RealESRGAN_x4plus.pth",
-              path_in_repo="enhancement/real_esrgan_x4plus.pth",
+              path_or_fileobj="RealESRGAN_x2plus.pth",
+              path_in_repo="enhancement/real_esrgan_x2plus.pth",
               repo_id="shababdd11/sultan-models",
               repo_type="model"
           )
