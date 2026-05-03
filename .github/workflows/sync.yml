@@ -1,4 +1,4 @@
-name: Upload facenet model
+name: Create codeformer folder
 on:
   workflow_dispatch:
 
@@ -6,26 +6,23 @@ jobs:
   transfer:
     runs-on: ubuntu-latest
     steps:
-      - name: Upload facenet
+      - name: Create folder
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          mkdir -p recognition
+          mkdir -p codeformer
+          touch codeformer/.gitkeep
           pip install -q huggingface_hub
-          
-          # تنزيل النموذج من المصدر الموثوق على Hugging Face
-          wget -q https://huggingface.co/doguscank/facenet-onnx/resolve/main/facenet.onnx -O recognition/facenet.onnx
-          echo "✅ facenet: $(ls -lh recognition/facenet.onnx | awk '{print $5}')"
           
           python3 << 'EOF'
           import os
           from huggingface_hub import HfApi
           api = HfApi(token=os.environ["HF_TOKEN"])
           api.upload_folder(
-              folder_path="recognition",
-              path_in_repo="recognition",
+              folder_path="codeformer",
+              path_in_repo="codeformer",
               repo_id="shababdd11/sultan-models",
               repo_type="model"
           )
-          print("✅ Done!")
+          print("✅ codeformer folder created!")
           EOF
