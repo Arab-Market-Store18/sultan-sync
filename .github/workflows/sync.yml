@@ -13,7 +13,7 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          huggingface-cli login --token $HF_TOKEN
+          hf auth login --token $HF_TOKEN
           mkdir -p ./gfpgan
           wget -q https://huggingface.co/public-data/replicate-models/resolve/main/GFPGANv1.4.pth -O ./gfpgan/GFPGANv1.4.pth
-          huggingface-cli upload shababdd11/sultan-models ./gfpgan ./gfpgan --repo-type model
+          hf upload shababdd11/sultan-models ./gfpgan ./gfpgan --repo-type model
