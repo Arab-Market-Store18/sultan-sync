@@ -1,4 +1,4 @@
-name: Create codeformer folder
+name: Upload codeformer
 on:
   workflow_dispatch:
 
@@ -6,23 +6,24 @@ jobs:
   transfer:
     runs-on: ubuntu-latest
     steps:
-      - name: Create folder
+      - name: Upload codeformer
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          mkdir -p codeformer
-          touch codeformer/.gitkeep
           pip install -q huggingface_hub
+          
+          wget -q https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/codeformer.pth
+          echo "✅ Downloaded: $(ls -lh codeformer.pth | awk '{print $5}')"
           
           python3 << 'EOF'
           import os
           from huggingface_hub import HfApi
           api = HfApi(token=os.environ["HF_TOKEN"])
-          api.upload_folder(
-              folder_path="codeformer",
-              path_in_repo="codeformer",
+          api.upload_file(
+              path_or_fileobj="codeformer.pth",
+              path_in_repo="codeformer/codeformer.pth",
               repo_id="shababdd11/sultan-models",
               repo_type="model"
           )
-          print("✅ codeformer folder created!")
+          print("✅ Done!")
           EOF
