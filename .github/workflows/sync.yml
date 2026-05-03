@@ -1,23 +1,19 @@
-name: Sultan Model Sync 2026
+name: Sultan Verified GFPGAN
 on:
-  workflow_dispatch: # هذا السطر هو الذي سيظهر لك زر "Run workflow"
+  workflow_dispatch:
 
 jobs:
-  sync_models:
+  transfer:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+      - name: Install Tools
+        run: pip install -U huggingface_hub
 
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-
-      - name: Install Hugging Face Hub
-        run: pip install huggingface_hub
-
-      - name: Execute Sync Script
+      - name: Verified Download and Upload
         env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }} # تأكد من إضافة التوكن في Settings > Secrets
-        run: python fix_models.py
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          huggingface-cli login --token $HF_TOKEN
+          mkdir -p ./gfpgan
+          wget -q https://huggingface.co/public-data/replicate-models/resolve/main/GFPGANv1.4.pth -O ./gfpgan/GFPGANv1.4.pth
+          huggingface-cli upload shababdd11/sultan-models ./gfpgan ./gfpgan --repo-type model
