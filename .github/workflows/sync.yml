@@ -1,4 +1,4 @@
-name: Sultan Verified GFPGAN
+name: Sultan GFPGAN Upload
 on:
   workflow_dispatch:
 
@@ -10,25 +10,25 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          mkdir -p ./gfpgan
-          wget -q https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/GFPGANv1.4.pth -O ./gfpgan/GFPGANv1.4.pth
-          echo "✅ Downloaded: $(ls -lh ./gfpgan/GFPGANv1.4.pth | awk '{print $5}')"
+          # تحميل الملف
+          mkdir -p gfpgan
+          wget -q https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/GFPGANv1.4.pth -O gfpgan/GFPGANv1.4.pth
+          echo "✅ Downloaded: $(ls -lh gfpgan/GFPGANv1.4.pth | awk '{print $5}')"
           
           pip install -q huggingface_hub
           
+          # رفع المجلد
           python3 << 'EOF'
           import os
           from huggingface_hub import HfApi
 
           api = HfApi(token=os.environ["HF_TOKEN"])
 
-          # رفع الملف مباشرة إلى جذر المستودع
-          api.upload_file(
-              path_or_fileobj="./gfpgan/GFPGANv1.4.pth",
-              path_in_repo="GFPGANv1.4.pth",
+          api.upload_folder(
+              folder_path="gfpgan",
+              path_in_repo="gfpgan",
               repo_id="shababdd11/sultan-models",
-              repo_type="model",
-              commit_message="Upload GFPGANv1.4.pth"
+              repo_type="model"
           )
-          print("✅ Uploaded to shababdd11/sultan-models")
+          print("✅ Uploaded gfpgan/GFPGANv1.4.pth")
           EOF
