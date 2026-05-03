@@ -1,28 +1,35 @@
 import os
-from huggingface_hub import HfApi
+import subprocess
 
-# 1. الإعدادات
+# 1. الإعدادات الأساسية
 token = os.getenv("HF_TOKEN")
 repo_id = "shababdd11/sultan-models"
-api = HfApi()
-
-# رابط الملف المباشر (Raw)
 file_url = "https://huggingface.co/public-data/replicate-models/resolve/main/GFPGANv1.4.pth"
+local_file = "GFPGANv1.4.pth"
 
-print("--- محاولة الرفع المباشر لتجاوز مشكلة الـ 0 بايت ---")
+print(f"--- بدء المعالجة النهائية لملف {local_file} ---")
 
 try:
-    # الرفع باستخدام upload_file ولكن مع تحديد run_as_future أو الرفع من URL مباشرة
-    # هذه الدالة تجبر Hugging Face على سحب الملف بنفسه إلى مستودعك
-    api.upload_file(
-        path_or_fileobj=file_url, # نمرر الرابط مباشرة هنا
-        path_in_repo="gfpgan/GFPGANv1.4.pth",
-        repo_id=repo_id,
-        token=token,
-        repo_type="model"
-    )
-    print("✅ تم إرسال أمر السحب المباشر للموقع!")
-    print("انتظر دقيقة ثم حدث الصفحة، سيتولى سيرفر Hugging Face المهمة.")
+    # 2. تحميل الملف إلى سيرفر GitHub أولاً (باستخدام wget لضمان القوة)
+    print("جاري تحميل الملف من المصدر...")
+    subprocess.run(["wget", "-O", local_file, file_url], check=True)
+    
+    # التأكد من حجم الملف المحمل
+    size = os.path.getsize(local_file) / (1024 * 1024)
+    print(f"✅ تم التحميل. الحجم الفعلي: {size:.2f} MB")
+
+    # 3. الرفع القسري باستخدام أمر huggingface-cli
+    # هذا الأمر هو الأضمن لتجاوز مشكلة الـ 0 بايت
+    print("جاري الرفع القسري إلى Hugging Face...")
+    upload_cmd = [
+        "huggingface-cli", "upload",
+        repo_id,
+        local_file,
+        f"gfpgan/{local_file}",
+        "--token", token
+    ]
+    subprocess.run(upload_cmd, check=True)
+    print("--- ✅ تمت العملية بنجاح! تحقق من المستودع الآن ---")
 
 except Exception as e:
-    print(f"❌ حدث خطأ: {e}")
+    print(f"❌ حدث خطأ تقني: {e}")
