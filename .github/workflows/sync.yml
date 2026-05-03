@@ -1,4 +1,4 @@
-name: Upload real_esrgan_x4plus only
+name: Upload real_esrgan_x4plus
 on:
   workflow_dispatch:
 
@@ -6,13 +6,12 @@ jobs:
   transfer:
     runs-on: ubuntu-latest
     steps:
-      - name: Upload single model
+      - name: Upload model
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           pip install -q huggingface_hub
-          
-          wget -q https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.1/RealESRGAN_x4plus.pth
+          wget -q https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth
           echo "✅ Downloaded: $(ls -lh RealESRGAN_x4plus.pth | awk '{print $5}')"
           
           python3 << 'EOF'
