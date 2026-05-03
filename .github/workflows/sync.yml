@@ -1,4 +1,4 @@
-name: Upload recognition models
+name: Create recognition folder
 on:
   workflow_dispatch:
 
@@ -6,18 +6,13 @@ jobs:
   transfer:
     runs-on: ubuntu-latest
     steps:
-      - name: Upload recognition models
+      - name: Create folder
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           mkdir -p recognition
+          touch recognition/.gitkeep
           pip install -q huggingface_hub
-          
-          wget -q https://huggingface.co/deepinsight/insightface/resolve/main/models/buffalo_l/w600k_r50.onnx -O recognition/arcface.onnx
-          echo "✅ arcface: $(ls -lh recognition/arcface.onnx | awk '{print $5}')"
-          
-          wget -q https://huggingface.co/deepinsight/insightface/resolve/main/models/buffalo_l/w600k_r50.onnx -O recognition/facenet.onnx
-          echo "✅ facenet: $(ls -lh recognition/facenet.onnx | awk '{print $5}')"
           
           python3 << 'EOF'
           import os
@@ -29,5 +24,5 @@ jobs:
               repo_id="shababdd11/sultan-models",
               repo_type="model"
           )
-          print("✅ Done!")
+          print("✅ recognition folder created!")
           EOF
