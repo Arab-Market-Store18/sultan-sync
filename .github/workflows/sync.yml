@@ -14,27 +14,27 @@ jobs:
           pip install -q huggingface_hub
           
           python3 << 'EOF'
-          import os, subprocess
+          import os
           from huggingface_hub import HfApi
 
           token = os.environ["HF_TOKEN"]
           
-          # استخدام الروابط الرسمية من إصدارات FaceFusion على GitHub
-          files_info = {
-              "bisenet_resnet_34.onnx": "https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/bisenet_resnet_34.onnx",
-              "bisenet_resnet_18.onnx": "https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/bisenet_resnet_18.onnx"
+          # روابط GitHub الرسمية من facefusion-assets
+          files = {
+              "bisenet.onnx": "https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/bisenet_resnet_34.onnx",
+              "unet.onnx": "https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/bisenet_resnet_18.onnx"
           }
           
-          for filename, url in files_info.items():
-              print(f"جاري تحميل {filename}...")
-              result = os.system(f'wget -q --show-progress "{url}" -O segmentation/{filename}')
-              if os.path.exists(f"segmentation/{filename}") and os.path.getsize(f"segmentation/{filename}") > 0:
+          for filename, url in files.items():
+              print(f"Downloading {filename}...")
+              os.system(f'wget -q --show-progress "{url}" -O segmentation/{filename}')
+              if os.path.exists(f"segmentation/{filename}"):
                   size_mb = os.path.getsize(f"segmentation/{filename}")/1024/1024
                   print(f"✅ {filename}: {size_mb:.1f} MB")
               else:
-                  print(f"❌ فشل تحميل {filename}")
-
-          # رفع الملفات الموجودة إلى مستودعك
+                  print(f"❌ Failed: {filename}")
+          
+          # رفع الملفات
           api = HfApi(token=token)
           api.upload_folder(
               folder_path="segmentation",
@@ -42,5 +42,5 @@ jobs:
               repo_id="shababdd11/sultan-models",
               repo_type="model"
           )
-          print("✅ تمت عملية الرفع")
+          print("✅ Done!")
           EOF
