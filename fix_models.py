@@ -1,34 +1,42 @@
 import os
-import requests
+import urllib.request
 from huggingface_hub import HfApi
 
+# 1. إعدادات الهوية (تأكد أن التوكن مضاف في Secrets باسم HF_TOKEN)
 token = os.getenv("HF_TOKEN")
 repo_id = "shababdd11/sultan-models"
 api = HfApi()
 
-# الرابط المباشر للملف (نسخة RAW لضمان الحجم الكامل)
+# 2. روابط الملف الحقيقية (نسخة RAW لضمان الحجم الكامل)
+# هذا الرابط هو البديل الموثق بعد خطأ الـ 404 السابق
 file_url = "https://huggingface.co/public-data/replicate-models/resolve/main/GFPGANv1.4.pth"
+local_filename = "temp_gfpgan.pth"
 
-print("--- بدء السحب المباشر لملف GFPGAN ---")
+print("--- جاري بدء عملية السحب لملف GFPGANv1.4 ---")
 
 try:
-    # 1. تحميل الملف إلى الذاكرة المؤقتة للـ Runner
-    response = requests.get(file_url, stream=True)
-    if response.status_code == 200:
-        with open("temp_gfpgan.pth", "wb") as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                f.write(chunk)
-        
-        # 2. الرفع المباشر إلى مستودعك
-        api.upload_file(
-            path_or_fileobj="temp_gfpgan.pth",
-            path_in_repo="gfpgan/GFPGANv1.4.pth",
-            repo_id=repo_id,
-            token=token
-        )
-        print("✅ تم الرفع بنجاح! تحقق من الحجم الآن.")
-    else:
-        print(f"❌ خطأ في الرابط: {response.status_code}")
+    # تحميل الملف من الرابط المباشر إلى سيرفر GitHub
+    print(f"جاري التحميل من: {file_url}")
+    urllib.request.urlretrieve(file_url, local_filename)
+    
+    # التأكد من حجم الملف (لحمايتك من ملفات الـ 0 بايت)
+    file_size = os.path.getsize(local_filename) / (1024 * 1024)
+    print(f"✅ اكتمل التحميل محلياً. الحجم: {file_size:.2f} MB")
+
+    # رفع الملف إلى مستودعك في المسار الصحيح حسب هيكل D:\
+    print(f"جاري الرفع إلى مستودعك في مجلد gfpgan/...")
+    api.upload_file(
+        path_or_fileobj=local_filename,
+        path_in_repo="gfpgan/GFPGANv1.4.pth",
+        repo_id=repo_id,
+        token=token
+    )
+    print("--- ✅ تمت العملية بنجاح! اذهب للمستودع وتأكد من الحجم ---")
 
 except Exception as e:
-    print(f"❌ خطأ تقني: {e}")
+    print(f"❌ حدث خطأ أثناء المعالجة: {e}")
+
+finally:
+    # حذف الملف المؤقت لتنظيف مساحة العمل
+    if os.path.exists(local_filename):
+        os.remove(local_filename)
