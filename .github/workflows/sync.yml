@@ -1,4 +1,4 @@
-name: Fix landmark_3d_68.onnx
+name: Fix landmark_3d_68
 on:
   workflow_dispatch:
 
@@ -6,29 +6,33 @@ jobs:
   transfer:
     runs-on: ubuntu-latest
     steps:
-      - name: Upload landmark model
+      - name: Fix model
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          mkdir -p buffalo_l
           pip install -q huggingface_hub
           
-          # تحميل الملف الصحيح
-          wget -q --show-progress https://huggingface.co/deepinsight/insightface/resolve/main/models/buffalo_l/landmark_3d_68.onnx -O buffalo_l/landmark_3d_68.onnx
-          echo "✅ Downloaded: $(ls -lh buffalo_l/landmark_3d_68.onnx | awk '{print $5}')"
-          
-          # رفع واستبدال الملف الفارغ
           python3 << 'EOF'
           import os
-          from huggingface_hub import HfApi
-          api = HfApi(token=os.environ["HF_TOKEN"])
-          
-          # رفع الملف مباشرة (يستبدل القديم)
+          from huggingface_hub import HfApi, hf_hub_download
+
+          token = os.environ["HF_TOKEN"]
+          api = HfApi(token=token)
+
+          # تحميل من InsightFace مباشرة
+          path = hf_hub_download(
+              repo_id="deepinsight/insightface",
+              filename="models/buffalo_l/landmark_3d_68.onnx",
+              token=token
+          )
+          print(f"✅ Downloaded: {os.path.getsize(path)/1024/1024:.1f} MB")
+
+          # رفع إلى مستودعك
           api.upload_file(
-              path_or_fileobj="buffalo_l/landmark_3d_68.onnx",
+              path_or_fileobj=path,
               path_in_repo="insightface/models/buffalo_l/landmark_3d_68.onnx",
               repo_id="shababdd11/sultan-models",
               repo_type="model"
           )
-          print("✅ landmark_3d_68.onnx uploaded!")
+          print("✅ Done!")
           EOF
