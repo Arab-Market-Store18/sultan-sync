@@ -1,29 +1,25 @@
-name: Upload codeformer
+name: Delete duplicate GFPGAN
 on:
   workflow_dispatch:
 
 jobs:
-  transfer:
+  delete:
     runs-on: ubuntu-latest
     steps:
-      - name: Upload codeformer
+      - name: Delete file
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           pip install -q huggingface_hub
           
-          wget -q https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/codeformer.pth
-          echo "✅ Downloaded: $(ls -lh codeformer.pth | awk '{print $5}')"
-          
           python3 << 'EOF'
           import os
           from huggingface_hub import HfApi
           api = HfApi(token=os.environ["HF_TOKEN"])
-          api.upload_file(
-              path_or_fileobj="codeformer.pth",
-              path_in_repo="codeformer/codeformer.pth",
+          api.delete_file(
+              path_in_repo="GFPGANv1.4.pth",
               repo_id="shababdd11/sultan-models",
               repo_type="model"
           )
-          print("✅ Done!")
+          print("✅ Deleted!")
           EOF
