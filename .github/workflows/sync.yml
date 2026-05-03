@@ -6,34 +6,26 @@ jobs:
   transfer:
     runs-on: ubuntu-latest
     steps:
-      - name: Install Tools
-        run: pip install -U huggingface_hub
-
-      - name: Verified Download and Upload
+      - name: Download and Upload GFPGAN
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          set -x
           mkdir -p ./gfpgan
-          
           wget -q https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/GFPGANv1.4.pth -O ./gfpgan/GFPGANv1.4.pth
+          echo "✅ Downloaded: $(ls -lh ./gfpgan/GFPGANv1.4.pth | awk '{print $5}')"
           
-          echo "Download completed successfully"
-          ls -la ./gfpgan/
+          pip install -q huggingface_hub
           
           python3 << 'EOF'
-          import os, sys
+          import os
           from huggingface_hub import HfApi
           
-          try:
-              api = HfApi(token=os.environ.get("HF_TOKEN"))
-              api.upload_folder(
-                  folder_path="./gfpgan",
-                  path_in_repo=".",
-                  repo_id="shababdd11/sultan-models",
-                  repo_type="model"
-              )
-          except Exception as e:
-              print(f"Error: {e}", file=sys.stderr)
-              sys.exit(1)
+          api = HfApi(token=os.environ["HF_TOKEN"])
+          api.upload_file(
+              path_or_fileobj="./gfpgan/GFPGANv1.4.pth",
+              path_in_repo="GFPGANv1.4.pth",
+              repo_id="shababdd11/sultan-models",
+              repo_type="model"
+          )
+          print("✅ Uploaded to shababdd11/sultan-models")
           EOF
