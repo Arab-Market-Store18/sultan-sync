@@ -1,4 +1,4 @@
-name: Sultan GFPGAN Upload
+name: Fix hyperswap_256_1c.onnx
 on:
   workflow_dispatch:
 
@@ -6,29 +6,27 @@ jobs:
   transfer:
     runs-on: ubuntu-latest
     steps:
-      - name: Download and Upload GFPGAN
+      - name: Download and Upload hyperswap
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # تحميل الملف
-          mkdir -p gfpgan
-          wget -q https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/GFPGANv1.4.pth -O gfpgan/GFPGANv1.4.pth
-          echo "✅ Downloaded: $(ls -lh gfpgan/GFPGANv1.4.pth | awk '{print $5}')"
+          mkdir -p swap
+          
+          # تحميل النموذج من المصدر الرسمي
+          wget -q https://huggingface.co/facefusion/models-3.3.0/resolve/main/hyperswap_1c_256.onnx -O swap/hyperswap_256_1c.onnx
+          echo "✅ Downloaded: $(ls -lh swap/hyperswap_256_1c.onnx | awk '{print $5}')"
           
           pip install -q huggingface_hub
           
-          # رفع المجلد
           python3 << 'EOF'
           import os
           from huggingface_hub import HfApi
-
           api = HfApi(token=os.environ["HF_TOKEN"])
-
           api.upload_folder(
-              folder_path="gfpgan",
-              path_in_repo="gfpgan",
+              folder_path="swap",
+              path_in_repo="swap",
               repo_id="shababdd11/sultan-models",
               repo_type="model"
           )
-          print("✅ Uploaded gfpgan/GFPGANv1.4.pth")
+          print("✅ Uploaded swap/hyperswap_256_1c.onnx")
           EOF
