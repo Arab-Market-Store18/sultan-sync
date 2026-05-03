@@ -1,4 +1,4 @@
-name: Create segmentation folder and upload models
+name: Download and Upload segmentation models
 on:
   workflow_dispatch:
 
@@ -6,32 +6,41 @@ jobs:
   transfer:
     runs-on: ubuntu-latest
     steps:
-      - name: Create folder and upload to sultan-models
+      - name: Upload segmentation models
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          mkdir -p segmentation
           pip install -q huggingface_hub
           
           python3 << 'EOF'
-          import os
+          import os, subprocess
           from huggingface_hub import HfApi
 
           token = os.environ["HF_TOKEN"]
+          
+          # استخدام الروابط الرسمية من إصدارات FaceFusion على GitHub
+          files_info = {
+              "bisenet_resnet_34.onnx": "https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/bisenet_resnet_34.onnx",
+              "bisenet_resnet_18.onnx": "https://github.com/facefusion/facefusion-assets/releases/download/models-3.1.0/bisenet_resnet_18.onnx"
+          }
+          
+          for filename, url in files_info.items():
+              print(f"جاري تحميل {filename}...")
+              result = os.system(f'wget -q --show-progress "{url}" -O segmentation/{filename}')
+              if os.path.exists(f"segmentation/{filename}") and os.path.getsize(f"segmentation/{filename}") > 0:
+                  size_mb = os.path.getsize(f"segmentation/{filename}")/1024/1024
+                  print(f"✅ {filename}: {size_mb:.1f} MB")
+              else:
+                  print(f"❌ فشل تحميل {filename}")
+
+          # رفع الملفات الموجودة إلى مستودعك
           api = HfApi(token=token)
-          
-          # إنشاء ملف مؤقت لإنشاء المجلد
-          os.makedirs("segmentation", exist_ok=True)
-          
-          # إنشاء ملف .gitkeep لضمان إنشاء المجلد
-          with open("segmentation/.gitkeep", "w") as f:
-              f.write("")
-          
-          print("📁 Uploading segmentation folder...")
           api.upload_folder(
               folder_path="segmentation",
               path_in_repo="segmentation",
               repo_id="shababdd11/sultan-models",
               repo_type="model"
           )
-          print("✅ segmentation folder created in sultan-models!")
+          print("✅ تمت عملية الرفع")
           EOF
