@@ -12,19 +12,42 @@ jobs:
         run: |
           mkdir -p segmentation
           
-          # تحميل مع التوثيق
-          wget --header="Authorization: Bearer ${HF_TOKEN}" --show-progress https://huggingface.co/facefusion/models/resolve/main/bisenet.onnx -O segmentation/bisenet.onnx
-          echo "✅ bisenet: $(ls -lh segmentation/bisenet.onnx | awk '{print $5}')"
-          
-          wget --header="Authorization: Bearer ${HF_TOKEN}" --show-progress https://huggingface.co/facefusion/models/resolve/main/unet.onnx -O segmentation/unet.onnx
-          echo "✅ unet: $(ls -lh segmentation/unet.onnx | awk '{print $5}')"
-          
           pip install -q huggingface_hub
           
           python3 << 'EOF'
           import os
-          from huggingface_hub import HfApi
-          api = HfApi(token=os.environ["HF_TOKEN"])
+          from huggingface_hub import hf_hub_download, HfApi
+
+          token = os.environ["HF_TOKEN"]
+          
+          # تحميل bisenet.onnx
+          try:
+              hf_hub_download(
+                  repo_id="facefusion/models",
+                  filename="bisenet.onnx",
+                  token=token,
+                  local_dir="segmentation",
+                  local_dir_use_symlinks=False
+              )
+              print(f"✅ bisenet: {os.path.getsize('segmentation/bisenet.onnx')/1024/1024:.1f} MB")
+          except Exception as e:
+              print(f"❌ bisenet: {e}")
+
+          # تحميل unet.onnx
+          try:
+              hf_hub_download(
+                  repo_id="facefusion/models",
+                  filename="unet.onnx",
+                  token=token,
+                  local_dir="segmentation",
+                  local_dir_use_symlinks=False
+              )
+              print(f"✅ unet: {os.path.getsize('segmentation/unet.onnx')/1024/1024:.1f} MB")
+          except Exception as e:
+              print(f"❌ unet: {e}")
+          
+          # رفع الملفات
+          api = HfApi(token=token)
           api.upload_folder(
               folder_path="segmentation",
               path_in_repo="segmentation",
