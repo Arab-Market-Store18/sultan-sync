@@ -1,4 +1,4 @@
-name: Upload facenet
+name: Upload recognition models
 on:
   workflow_dispatch:
 
@@ -6,21 +6,26 @@ jobs:
   transfer:
     runs-on: ubuntu-latest
     steps:
-      - name: Upload model
+      - name: Upload recognition models
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          mkdir -p recognition
           pip install -q huggingface_hub
-          wget -q https://huggingface.co/deepinsight/insightface/resolve/main/models/buffalo_l/w600k_r50.onnx -O facenet.onnx
-          echo "✅ Downloaded: $(ls -lh facenet.onnx | awk '{print $5}')"
+          
+          wget -q https://huggingface.co/deepinsight/insightface/resolve/main/models/buffalo_l/w600k_r50.onnx -O recognition/arcface.onnx
+          echo "✅ arcface: $(ls -lh recognition/arcface.onnx | awk '{print $5}')"
+          
+          wget -q https://huggingface.co/deepinsight/insightface/resolve/main/models/buffalo_l/w600k_r50.onnx -O recognition/facenet.onnx
+          echo "✅ facenet: $(ls -lh recognition/facenet.onnx | awk '{print $5}')"
           
           python3 << 'EOF'
           import os
           from huggingface_hub import HfApi
           api = HfApi(token=os.environ["HF_TOKEN"])
-          api.upload_file(
-              path_or_fileobj="facenet.onnx",
-              path_in_repo="recognition/facenet.onnx",
+          api.upload_folder(
+              folder_path="recognition",
+              path_in_repo="recognition",
               repo_id="shababdd11/sultan-models",
               repo_type="model"
           )
