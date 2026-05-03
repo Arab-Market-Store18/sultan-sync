@@ -1,4 +1,4 @@
-name: Fix landmark_3d_68
+name: Upload retinaface
 on:
   workflow_dispatch:
 
@@ -6,30 +6,25 @@ jobs:
   transfer:
     runs-on: ubuntu-latest
     steps:
-      - name: Download and Upload model
+      - name: Download and Upload retinaface
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          mkdir -p detection
           pip install -q huggingface_hub
           
-          # تحميل buffalo_l.zip من المصدر الرسمي
-          wget -q https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l.zip
-          echo "✅ Downloaded buffalo_l.zip"
+          wget -q https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/retinaface_10g.onnx -O detection/retinaface.onnx
+          echo "✅ Downloaded: $(ls -lh detection/retinaface.onnx | awk '{print $5}')"
           
-          # استخراج landmark_3d_68.onnx فقط
-          unzip -q buffalo_l.zip "landmark_3d_68.onnx"
-          echo "✅ Extracted: $(ls -lh landmark_3d_68.onnx | awk '{print $5}')"
-          
-          # رفع إلى مستودعك
           python3 << 'EOF'
           import os
           from huggingface_hub import HfApi
           api = HfApi(token=os.environ["HF_TOKEN"])
-          api.upload_file(
-              path_or_fileobj="landmark_3d_68.onnx",
-              path_in_repo="insightface/models/buffalo_l/landmark_3d_68.onnx",
+          api.upload_folder(
+              folder_path="detection",
+              path_in_repo="detection",
               repo_id="shababdd11/sultan-models",
               repo_type="model"
           )
-          print("✅ Done!")
+          print("✅ Uploaded!")
           EOF
