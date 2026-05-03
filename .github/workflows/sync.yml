@@ -12,8 +12,8 @@ jobs:
         run: |
           mkdir -p segmentation
           
-          wget -q https://huggingface.co/facefusion/models-3.3.0/resolve/main/bisenet.onnx -O segmentation/binenet.onnx
-          echo "✅ binenet: $(ls -lh segmentation/binenet.onnx | awk '{print $5}')"
+          wget -q https://huggingface.co/facefusion/models-3.3.0/resolve/main/bisenet.onnx -O segmentation/bisenet.onnx
+          echo "✅ bisenet: $(ls -lh segmentation/bisenet.onnx | awk '{print $5}')"
           
           wget -q https://huggingface.co/facefusion/models-3.3.0/resolve/main/unet.onnx -O segmentation/unet.onnx
           echo "✅ unet: $(ls -lh segmentation/unet.onnx | awk '{print $5}')"
