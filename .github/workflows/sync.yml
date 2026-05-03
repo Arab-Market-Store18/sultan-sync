@@ -1,4 +1,4 @@
-name: Download and Upload segmentation models
+name: Upload unet.onnx
 on:
   workflow_dispatch:
 
@@ -6,41 +6,25 @@ jobs:
   transfer:
     runs-on: ubuntu-latest
     steps:
-      - name: Upload segmentation models
+      - name: Upload unet model
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           mkdir -p segmentation
           pip install -q huggingface_hub
           
+          wget -q --show-progress https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/bisenet_resnet_18.onnx -O segmentation/unet.onnx
+          echo "✅ Downloaded: $(ls -lh segmentation/unet.onnx | awk '{print $5}')"
+          
           python3 << 'EOF'
           import os
           from huggingface_hub import HfApi
-
-          token = os.environ["HF_TOKEN"]
-          
-          # روابط GitHub الرسمية من facefusion-assets
-          files = {
-              "bisenet.onnx": "https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/bisenet_resnet_34.onnx",
-              "unet.onnx": "https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/bisenet_resnet_18.onnx"
-          }
-          
-          for filename, url in files.items():
-              print(f"Downloading {filename}...")
-              os.system(f'wget -q --show-progress "{url}" -O segmentation/{filename}')
-              if os.path.exists(f"segmentation/{filename}"):
-                  size_mb = os.path.getsize(f"segmentation/{filename}")/1024/1024
-                  print(f"✅ {filename}: {size_mb:.1f} MB")
-              else:
-                  print(f"❌ Failed: {filename}")
-          
-          # رفع الملفات
-          api = HfApi(token=token)
+          api = HfApi(token=os.environ["HF_TOKEN"])
           api.upload_folder(
               folder_path="segmentation",
               path_in_repo="segmentation",
               repo_id="shababdd11/sultan-models",
               repo_type="model"
           )
-          print("✅ Done!")
+          print("✅ unet.onnx uploaded!")
           EOF
