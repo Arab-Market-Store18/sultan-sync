@@ -1,16 +1,15 @@
-name: Download and Upload segmentation models
+name: Clean segmentation folder
 on:
   workflow_dispatch:
 
 jobs:
-  transfer:
+  clean:
     runs-on: ubuntu-latest
     steps:
-      - name: Upload segmentation models
+      - name: Clean segmentation folder
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          mkdir -p segmentation
           pip install -q huggingface_hub
           
           python3 << 'EOF'
@@ -18,29 +17,29 @@ jobs:
           from huggingface_hub import HfApi
 
           token = os.environ["HF_TOKEN"]
-          
-          # روابط GitHub الرسمية من facefusion-assets
-          files = {
-              "bisenet.onnx": "https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/bisenet_resnet_34.onnx",
-              "unet.onnx": "https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/bisenet_resnet_18.onnx"
-          }
-          
-          for filename, url in files.items():
-              print(f"Downloading {filename}...")
-              os.system(f'wget -q --show-progress "{url}" -O segmentation/{filename}')
-              if os.path.exists(f"segmentation/{filename}"):
-                  size_mb = os.path.getsize(f"segmentation/{filename}")/1024/1024
-                  print(f"✅ {filename}: {size_mb:.1f} MB")
-              else:
-                  print(f"❌ Failed: {filename}")
-          
-          # رفع الملفات
           api = HfApi(token=token)
-          api.upload_folder(
-              folder_path="segmentation",
-              path_in_repo="segmentation",
-              repo_id="shababdd11/sultan-models",
-              repo_type="model"
-          )
-          print("✅ Done!")
+          repo_id = "shababdd11/sultan-models"
+          
+          # حذف الملفات الفارغة فقط
+          files_to_delete = [
+              ".gitkeep",        # فارغ
+              "unet.onnx"        # فارغ (0 Bytes)
+          ]
+          
+          for file in files_to_delete:
+              try:
+                  api.delete_file(
+                      path_in_repo=f"segmentation/{file}",
+                      repo_id=repo_id,
+                      repo_type="model"
+                  )
+                  print(f"🗑️ Deleted: segmentation/{file}")
+              except Exception as e:
+                  print(f"❌ Failed to delete {file}: {e}")
+          
+          print("✅ Cleanup completed!")
+          print("Remaining files:")
+          print("  - bisenet.onnx (93.6 MB)")
+          print("  - bisenet_resnet_18.onnx (53.2 MB)")
+          print("  - bisenet_resnet_34.onnx (93.6 MB)")
           EOF
