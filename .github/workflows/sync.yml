@@ -13,30 +13,26 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          set -x  # Debug mode
+          set -x
           mkdir -p ./gfpgan
-          wget -q https://huggingface.co/public-data/replicate-models/resolve/main/GFPGANv1.4.pth -O ./gfpgan/GFPGANv1.4.pth || {
-            echo "Download failed"
-            exit 1
-          }
+          
+          wget -q https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/GFPGANv1.4.pth -O ./gfpgan/GFPGANv1.4.pth
+          
           echo "Download completed successfully"
           ls -la ./gfpgan/
           
           python3 << 'EOF'
-          import os
-          import sys
+          import os, sys
           from huggingface_hub import HfApi
           
           try:
               api = HfApi(token=os.environ.get("HF_TOKEN"))
-              print("Starting upload...")
               api.upload_folder(
                   folder_path="./gfpgan",
                   path_in_repo=".",
                   repo_id="shababdd11/sultan-models",
                   repo_type="model"
               )
-              print("Upload completed successfully!")
           except Exception as e:
               print(f"Error: {e}", file=sys.stderr)
               sys.exit(1)
