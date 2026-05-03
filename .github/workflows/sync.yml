@@ -1,4 +1,4 @@
-name: Create recognition folder
+name: Upload facenet model
 on:
   workflow_dispatch:
 
@@ -6,13 +6,16 @@ jobs:
   transfer:
     runs-on: ubuntu-latest
     steps:
-      - name: Create folder
+      - name: Upload facenet
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           mkdir -p recognition
-          touch recognition/.gitkeep
           pip install -q huggingface_hub
+          
+          # تنزيل النموذج من المصدر الموثوق على Hugging Face
+          wget -q https://huggingface.co/doguscank/facenet-onnx/resolve/main/facenet.onnx -O recognition/facenet.onnx
+          echo "✅ facenet: $(ls -lh recognition/facenet.onnx | awk '{print $5}')"
           
           python3 << 'EOF'
           import os
@@ -24,5 +27,5 @@ jobs:
               repo_id="shababdd11/sultan-models",
               repo_type="model"
           )
-          print("✅ recognition folder created!")
+          print("✅ Done!")
           EOF
