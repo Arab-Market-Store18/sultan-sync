@@ -1,4 +1,4 @@
-name: Upload unet.onnx
+name: Create segmentation folder and upload models
 on:
   workflow_dispatch:
 
@@ -6,25 +6,32 @@ jobs:
   transfer:
     runs-on: ubuntu-latest
     steps:
-      - name: Upload unet model
+      - name: Create folder and upload to sultan-models
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          mkdir -p segmentation
           pip install -q huggingface_hub
-          
-          wget -q --show-progress https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/bisenet_resnet_18.onnx -O segmentation/unet.onnx
-          echo "✅ Downloaded: $(ls -lh segmentation/unet.onnx | awk '{print $5}')"
           
           python3 << 'EOF'
           import os
           from huggingface_hub import HfApi
-          api = HfApi(token=os.environ["HF_TOKEN"])
+
+          token = os.environ["HF_TOKEN"]
+          api = HfApi(token=token)
+          
+          # إنشاء ملف مؤقت لإنشاء المجلد
+          os.makedirs("segmentation", exist_ok=True)
+          
+          # إنشاء ملف .gitkeep لضمان إنشاء المجلد
+          with open("segmentation/.gitkeep", "w") as f:
+              f.write("")
+          
+          print("📁 Uploading segmentation folder...")
           api.upload_folder(
               folder_path="segmentation",
               path_in_repo="segmentation",
               repo_id="shababdd11/sultan-models",
               repo_type="model"
           )
-          print("✅ unet.onnx uploaded!")
+          print("✅ segmentation folder created in sultan-models!")
           EOF
