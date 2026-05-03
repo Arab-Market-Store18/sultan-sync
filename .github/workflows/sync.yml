@@ -1,4 +1,4 @@
-name: Fix hyperswap_256_1c.onnx
+name: Fix segmentation models
 on:
   workflow_dispatch:
 
@@ -6,15 +6,17 @@ jobs:
   transfer:
     runs-on: ubuntu-latest
     steps:
-      - name: Download and Upload hyperswap
+      - name: Download and Upload segmentation models
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          mkdir -p swap
+          mkdir -p segmentation
           
-          # تحميل النموذج من المصدر الرسمي
-          wget -q https://huggingface.co/facefusion/models-3.3.0/resolve/main/hyperswap_1c_256.onnx -O swap/hyperswap_256_1c.onnx
-          echo "✅ Downloaded: $(ls -lh swap/hyperswap_256_1c.onnx | awk '{print $5}')"
+          wget -q https://huggingface.co/facefusion/models-3.3.0/resolve/main/bisenet.onnx -O segmentation/binenet.onnx
+          echo "✅ binenet: $(ls -lh segmentation/binenet.onnx | awk '{print $5}')"
+          
+          wget -q https://huggingface.co/facefusion/models-3.3.0/resolve/main/unet.onnx -O segmentation/unet.onnx
+          echo "✅ unet: $(ls -lh segmentation/unet.onnx | awk '{print $5}')"
           
           pip install -q huggingface_hub
           
@@ -23,10 +25,10 @@ jobs:
           from huggingface_hub import HfApi
           api = HfApi(token=os.environ["HF_TOKEN"])
           api.upload_folder(
-              folder_path="swap",
-              path_in_repo="swap",
+              folder_path="segmentation",
+              path_in_repo="segmentation",
               repo_id="shababdd11/sultan-models",
               repo_type="model"
           )
-          print("✅ Uploaded swap/hyperswap_256_1c.onnx")
+          print("✅ Uploaded segmentation models")
           EOF
