@@ -10,14 +10,12 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # إنشاء المجلد
           mkdir -p segmentation
           
-          # تحميل الملفات
-          wget --show-progress https://huggingface.co/facefusion/models-3.3.0/resolve/main/bisenet.onnx -O segmentation/bisenet.onnx
+          wget --show-progress https://huggingface.co/facefusion/models/resolve/main/bisenet.onnx -O segmentation/bisenet.onnx
           echo "✅ bisenet: $(ls -lh segmentation/bisenet.onnx | awk '{print $5}')"
           
-          wget --show-progress https://huggingface.co/facefusion/models-3.3.0/resolve/main/unet.onnx -O segmentation/unet.onnx
+          wget --show-progress https://huggingface.co/facefusion/models/resolve/main/unet.onnx -O segmentation/unet.onnx
           echo "✅ unet: $(ls -lh segmentation/unet.onnx | awk '{print $5}')"
           
           pip install -q huggingface_hub
