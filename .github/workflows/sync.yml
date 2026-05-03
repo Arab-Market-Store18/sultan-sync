@@ -6,30 +6,27 @@ jobs:
   transfer:
     runs-on: ubuntu-latest
     steps:
-      - name: Fix model
+      - name: Download and Upload model
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           pip install -q huggingface_hub
           
+          # تحميل buffalo_l.zip من المصدر الرسمي
+          wget -q https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l.zip
+          echo "✅ Downloaded buffalo_l.zip"
+          
+          # استخراج landmark_3d_68.onnx فقط
+          unzip -q buffalo_l.zip "landmark_3d_68.onnx"
+          echo "✅ Extracted: $(ls -lh landmark_3d_68.onnx | awk '{print $5}')"
+          
+          # رفع إلى مستودعك
           python3 << 'EOF'
           import os
-          from huggingface_hub import HfApi, hf_hub_download
-
-          token = os.environ["HF_TOKEN"]
-          api = HfApi(token=token)
-
-          # تحميل من InsightFace مباشرة
-          path = hf_hub_download(
-              repo_id="deepinsight/insightface",
-              filename="models/buffalo_l/landmark_3d_68.onnx",
-              token=token
-          )
-          print(f"✅ Downloaded: {os.path.getsize(path)/1024/1024:.1f} MB")
-
-          # رفع إلى مستودعك
+          from huggingface_hub import HfApi
+          api = HfApi(token=os.environ["HF_TOKEN"])
           api.upload_file(
-              path_or_fileobj=path,
+              path_or_fileobj="landmark_3d_68.onnx",
               path_in_repo="insightface/models/buffalo_l/landmark_3d_68.onnx",
               repo_id="shababdd11/sultan-models",
               repo_type="model"
