@@ -1,4 +1,4 @@
-name: Fix enhancement models
+name: Upload real_esrgan_x4plus only
 on:
   workflow_dispatch:
 
@@ -6,28 +6,24 @@ jobs:
   transfer:
     runs-on: ubuntu-latest
     steps:
-      - name: Download and Upload enhancement models
+      - name: Upload single model
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          mkdir -p enhancement
           pip install -q huggingface_hub
           
-          wget -q https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.1/RealESRGAN_x2plus.pth -O enhancement/real_esrgan_x2plus.pth
-          echo "✅ real_esrgan_x2plus: $(ls -lh enhancement/real_esrgan_x2plus.pth | awk '{print $5}')"
-          
-          wget -q https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.1/RealESRGAN_x4plus.pth -O enhancement/real_esrgan_x4plus.pth
-          echo "✅ real_esrgan_x4plus: $(ls -lh enhancement/real_esrgan_x4plus.pth | awk '{print $5}')"
+          wget -q https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.1/RealESRGAN_x4plus.pth
+          echo "✅ Downloaded: $(ls -lh RealESRGAN_x4plus.pth | awk '{print $5}')"
           
           python3 << 'EOF'
           import os
           from huggingface_hub import HfApi
           api = HfApi(token=os.environ["HF_TOKEN"])
-          api.upload_folder(
-              folder_path="enhancement",
-              path_in_repo="enhancement",
+          api.upload_file(
+              path_or_fileobj="RealESRGAN_x4plus.pth",
+              path_in_repo="enhancement/real_esrgan_x4plus.pth",
               repo_id="shababdd11/sultan-models",
               repo_type="model"
           )
-          print("✅ Uploaded!")
+          print("✅ Done!")
           EOF
