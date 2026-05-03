@@ -1,45 +1,34 @@
-name: Clean segmentation folder
+name: Fix landmark_3d_68.onnx
 on:
   workflow_dispatch:
 
 jobs:
-  clean:
+  transfer:
     runs-on: ubuntu-latest
     steps:
-      - name: Clean segmentation folder
+      - name: Upload landmark model
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          mkdir -p buffalo_l
           pip install -q huggingface_hub
           
+          # تحميل الملف الصحيح
+          wget -q --show-progress https://huggingface.co/deepinsight/insightface/resolve/main/models/buffalo_l/landmark_3d_68.onnx -O buffalo_l/landmark_3d_68.onnx
+          echo "✅ Downloaded: $(ls -lh buffalo_l/landmark_3d_68.onnx | awk '{print $5}')"
+          
+          # رفع واستبدال الملف الفارغ
           python3 << 'EOF'
           import os
           from huggingface_hub import HfApi
-
-          token = os.environ["HF_TOKEN"]
-          api = HfApi(token=token)
-          repo_id = "shababdd11/sultan-models"
+          api = HfApi(token=os.environ["HF_TOKEN"])
           
-          # حذف الملفات الفارغة فقط
-          files_to_delete = [
-              ".gitkeep",        # فارغ
-              "unet.onnx"        # فارغ (0 Bytes)
-          ]
-          
-          for file in files_to_delete:
-              try:
-                  api.delete_file(
-                      path_in_repo=f"segmentation/{file}",
-                      repo_id=repo_id,
-                      repo_type="model"
-                  )
-                  print(f"🗑️ Deleted: segmentation/{file}")
-              except Exception as e:
-                  print(f"❌ Failed to delete {file}: {e}")
-          
-          print("✅ Cleanup completed!")
-          print("Remaining files:")
-          print("  - bisenet.onnx (93.6 MB)")
-          print("  - bisenet_resnet_18.onnx (53.2 MB)")
-          print("  - bisenet_resnet_34.onnx (93.6 MB)")
+          # رفع الملف مباشرة (يستبدل القديم)
+          api.upload_file(
+              path_or_fileobj="buffalo_l/landmark_3d_68.onnx",
+              path_in_repo="insightface/models/buffalo_l/landmark_3d_68.onnx",
+              repo_id="shababdd11/sultan-models",
+              repo_type="model"
+          )
+          print("✅ landmark_3d_68.onnx uploaded!")
           EOF
