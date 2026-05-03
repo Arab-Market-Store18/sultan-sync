@@ -1,4 +1,4 @@
-name: Fix segmentation models
+name: Create segmentation folder and upload models
 on:
   workflow_dispatch:
 
@@ -6,61 +6,32 @@ jobs:
   transfer:
     runs-on: ubuntu-latest
     steps:
-      - name: Download and Upload segmentation models
+      - name: Create folder and upload to sultan-models
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          mkdir -p segmentation
-          echo "✅ Created segmentation folder"
-          
           pip install -q huggingface_hub
           
           python3 << 'EOF'
           import os
-          from huggingface_hub import HfApi, hf_hub_download
+          from huggingface_hub import HfApi
 
           token = os.environ["HF_TOKEN"]
-
-          # قائمة المصادر المحتملة
-          sources = {
-              "bisenet.onnx": [
-                  ("hacksider/facefusion", "bisenet.onnx"),
-                  ("bluefoxcreation/insightface-models", "bisenet.onnx"),
-              ],
-              "unet.onnx": [
-                  ("hacksider/facefusion", "unet.onnx"),
-                  ("bluefoxcreation/insightface-models", "unet.onnx"),
-              ]
-          }
-
-          for filename, repos in sources.items():
-              success = False
-              for repo_id, file_path in repos:
-                  try:
-                      print(f"Trying {repo_id}/{file_path}...")
-                      path = hf_hub_download(
-                          repo_id=repo_id,
-                          filename=file_path,
-                          token=token,
-                          local_dir="segmentation",
-                          local_dir_use_symlinks=False
-                      )
-                      print(f"✅ {filename}: {os.path.getsize(path)/1024/1024:.1f} MB")
-                      success = True
-                      break
-                  except Exception as e:
-                      print(f"❌ {repo_id}: {str(e)[:50]}")
-              
-              if not success:
-                  print(f"❌ Could not download {filename}")
-
-          # رفع أي ملفات تم تحميلها
           api = HfApi(token=token)
+          
+          # إنشاء ملف مؤقت لإنشاء المجلد
+          os.makedirs("segmentation", exist_ok=True)
+          
+          # إنشاء ملف .gitkeep لضمان إنشاء المجلد
+          with open("segmentation/.gitkeep", "w") as f:
+              f.write("")
+          
+          print("📁 Uploading segmentation folder...")
           api.upload_folder(
               folder_path="segmentation",
               path_in_repo="segmentation",
               repo_id="shababdd11/sultan-models",
               repo_type="model"
           )
-          print("✅ Process completed")
+          print("✅ segmentation folder created in sultan-models!")
           EOF
