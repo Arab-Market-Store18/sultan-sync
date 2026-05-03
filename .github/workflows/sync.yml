@@ -19,13 +19,16 @@ jobs:
           python3 << 'EOF'
           import os
           from huggingface_hub import HfApi
-          
+
           api = HfApi(token=os.environ["HF_TOKEN"])
+
+          # رفع الملف مباشرة إلى جذر المستودع
           api.upload_file(
               path_or_fileobj="./gfpgan/GFPGANv1.4.pth",
               path_in_repo="GFPGANv1.4.pth",
               repo_id="shababdd11/sultan-models",
-              repo_type="model"
+              repo_type="model",
+              commit_message="Upload GFPGANv1.4.pth"
           )
           print("✅ Uploaded to shababdd11/sultan-models")
           EOF
