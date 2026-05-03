@@ -13,7 +13,15 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          hf auth login --token $HF_TOKEN
           mkdir -p ./gfpgan
           wget -q https://huggingface.co/public-data/replicate-models/resolve/main/GFPGANv1.4.pth -O ./gfpgan/GFPGANv1.4.pth
-          hf upload shababdd11/sultan-models ./gfpgan ./gfpgan --repo-type model
+          python -c "
+          from huggingface_hub import HfApi
+          api = HfApi()
+          api.upload_folder(
+              folder_path='./gfpgan',
+              path_in_repo='gfpgan',
+              repo_id='shababdd11/sultan-models',
+              repo_type='model'
+          )
+          "
