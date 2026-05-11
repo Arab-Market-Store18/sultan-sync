@@ -1,25 +1,35 @@
-name: Delete duplicate GFPGAN
+name: Sultan Create Pose Folder
 on:
   workflow_dispatch:
 
 jobs:
-  delete:
+  transfer:
     runs-on: ubuntu-latest
     steps:
-      - name: Delete file
+      - name: Create Pose and Download Model
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          # 1. إنشاء المجلد الناقص سحابياً
+          mkdir -p pose
+          
+          # 2. سحب نموذج DW-Pose (لضبط ميلان الرأس)
+          wget -q https://huggingface.co/yzd-v/DWPose/resolve/main/dw-ll_ucoco_384.onnx -O pose/dw-pose-l.onnx
+          echo "✅ Downloaded: $(ls -lh pose/dw-pose-l.onnx | awk '{print $5}')"
+          
+          # 3. تثبيت أداة الرفع
           pip install -q huggingface_hub
           
+          # 4. الرفع إلى مستودع sultan-models
           python3 << 'EOF'
           import os
           from huggingface_hub import HfApi
           api = HfApi(token=os.environ["HF_TOKEN"])
-          api.delete_file(
-              path_in_repo="GFPGANv1.4.pth",
+          api.upload_folder(
+              folder_path="pose",
+              path_in_repo="pose",
               repo_id="shababdd11/sultan-models",
               repo_type="model"
           )
-          print("✅ Deleted!")
+          print("✅ Created folder 'pose' and uploaded dw-pose-l.onnx")
           EOF
