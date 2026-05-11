@@ -1,4 +1,4 @@
-name: Sultan Create Pose Folder
+name: Sultan Final Models Sync
 on:
   workflow_dispatch:
 
@@ -6,30 +6,42 @@ jobs:
   transfer:
     runs-on: ubuntu-latest
     steps:
-      - name: Create Pose and Download Model
+      - name: Download Hybrid Models
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # 1. إنشاء المجلد الناقص سحابياً
-          mkdir -p pose
+          # تجهيز المجلدات المؤقتة
+          mkdir -p detection segmentation
           
-          # 2. سحب نموذج DW-Pose (لضبط ميلان الرأس)
-          wget -q https://huggingface.co/yzd-v/DWPose/resolve/main/dw-ll_ucoco_384.onnx -O pose/dw-pose-l.onnx
-          echo "✅ Downloaded: $(ls -lh pose/dw-pose-l.onnx | awk '{print $5}')"
+          # 1. سحب نموذج YOLOv11 (أحدث إصدار للكشف والوضعية)
+          wget -q https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11s-pose.pt -O detection/yolo11s-pose.pt
           
-          # 3. تثبيت أداة الرفع
+          # 2. سحب نموذج SAM 2 (أقوى نموذج عزل حالياً)
+          wget -q https://dl.fbaipublicfiles.com/segment_anything_2/072824/sam2_hiera_tiny.pt -O segmentation/sam2_tiny.pt
+          
+          echo "✅ تم سحب النماذج سحابياً بنجاح"
+
+          # رفع الملفات إلى Hugging Face
           pip install -q huggingface_hub
           
-          # 4. الرفع إلى مستودع sultan-models
           python3 << 'EOF'
           import os
           from huggingface_hub import HfApi
           api = HfApi(token=os.environ["HF_TOKEN"])
-          api.upload_folder(
-              folder_path="pose",
-              path_in_repo="pose",
-              repo_id="shababdd11/sultan-models",
-              repo_type="model"
+          repo_id = "shababdd11/sultan-models"
+          
+          # رفع نموذج الـ Detection
+          api.upload_file(
+              path_or_fileobj="detection/yolo11s-pose.pt",
+              path_in_repo="detection/yolo11s-pose.pt",
+              repo_id=repo_id
           )
-          print("✅ Created folder 'pose' and uploaded dw-pose-l.onnx")
+          
+          # رفع نموذج الـ Segmentation
+          api.upload_file(
+              path_or_fileobj="segmentation/sam2_tiny.pt",
+              path_in_repo="segmentation/sam2_tiny.pt",
+              repo_id=repo_id
+          )
+          print("🚀 النماذج الهجينة أصبحت الآن في مستودعك!")
           EOF
