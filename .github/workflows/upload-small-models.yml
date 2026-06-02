@@ -1,55 +1,32 @@
-name: Download u2net and pirenderer from GitHub
+name: Download LivePortrait
 on:
   workflow_dispatch:
 
 jobs:
-  download:
+  upload:
     runs-on: ubuntu-latest
     steps:
-      - name: Install requests
-        run: pip install -q requests huggingface_hub
+      - name: Install tools
+        run: pip install -q huggingface_hub
 
-      - name: Download and Upload Models
+      - name: Download and Upload LivePortrait
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           python3 << 'EOF'
           import os
-          import requests
-          from huggingface_hub import HfApi
-
+          from huggingface_hub import HfApi, snapshot_download
+          
           api = HfApi(token=os.environ["HF_TOKEN"])
           repo = "shababdd11/sultan-models"
-
-          URLS = {
-              "u2net": "https://github.com/xuebinqin/U-2-Net/raw/master/saved_models/u2net/u2net.pth",
-              "pirenderer": "https://github.com/RenYurui/PIRenderer/raw/master/checkpoints/pirenderer_weights.pth"
-          }
-
-          targets = {
-              "u2net": "segmentation/u2net/u2net.pth",
-              "pirenderer": "pose/pirenderer/pirenderer.pth"
-          }
-
-          for name, url in URLS.items():
-              print(f"⏳ تحميل {name}...")
-              try:
-                  response = requests.get(url, stream=True, timeout=60)
-                  if response.status_code == 200:
-                      filepath = f"{name}.pth"
-                      with open(filepath, "wb") as f:
-                          for chunk in response.iter_content(chunk_size=8192):
-                              f.write(chunk)
-                      api.upload_file(
-                          path_or_fileobj=filepath,
-                          path_in_repo=targets[name],
-                          repo_id=repo
-                      )
-                      print(f"✅ {name} done")
-                  else:
-                      print(f"❌ {name} فشل: {response.status_code}")
-              except Exception as e:
-                  print(f"❌ {name} خطأ: {e}")
+          
+          print("⏳ تحميل LivePortrait...")
+          try:
+              path = snapshot_download("KwaiVGI/LivePortrait")
+              api.upload_folder(folder_path=path, path_in_repo="pose/liveportrait", repo_id=repo)
+              print("✅ liveportrait done")
+          except Exception as e:
+              print(f"❌ فشل: {e}")
           
           print("🚀 تم!")
           EOF
