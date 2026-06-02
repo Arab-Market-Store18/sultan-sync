@@ -1,7 +1,7 @@
 name: Check All Sultan Models
 on:
   workflow_dispatch:
-
+ 
 jobs:
   check:
     runs-on: ubuntu-latest
