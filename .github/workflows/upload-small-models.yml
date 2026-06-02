@@ -20,47 +20,21 @@ jobs:
           api = HfApi(token=os.environ["HF_TOKEN"])
           repo = "shababdd11/sultan-models"
           
-          # 1. CLIP - تم بنجاح
-          print("⏳ تحميل CLIP...")
-          path = snapshot_download("openai/clip-vit-base-patch32")
-          api.upload_folder(folder_path=path, path_in_repo="analysis/clip-vit-base-patch32", repo_id=repo)
-          print("✅ CLIP done")
+          models = [
+              ("openai/clip-vit-base-patch32", "analysis/clip-vit-base-patch32"),
+              ("briaai/RMBG-1.4", "segmentation/u2net-portrait"),
+              ("h94/IP-Adapter-FaceID", "relighting/dpr"),
+              ("lllyasviel/IC-Light", "relighting/switchlight"),
+          ]
           
-          # 2. U2Net
-          print("⏳ تحميل U2Net...")
-          path = snapshot_download("nielsr/u2net")
-          api.upload_folder(folder_path=path, path_in_repo="segmentation/u2net", repo_id=repo)
-          print("✅ U2Net done")
-          
-          # 3. U2Net Portrait
-          print("⏳ تحميل U2Net Portrait...")
-          path = snapshot_download("briaai/RMBG-1.4")
-          api.upload_folder(folder_path=path, path_in_repo="segmentation/u2net-portrait", repo_id=repo)
-          print("✅ U2Net Portrait done")
-          
-          # 4. BiRefNet
-          print("⏳ تحميل BiRefNet...")
-          path = snapshot_download("ZhengPeng7/BiRefNet")
-          api.upload_folder(folder_path=path, path_in_repo="segmentation/birefnet", repo_id=repo)
-          print("✅ BiRefNet done")
-          
-          # 5. PIRenderer
-          print("⏳ تحميل PIRenderer...")
-          path = snapshot_download("tobecwb/PIRenderer")
-          api.upload_folder(folder_path=path, path_in_repo="pose/pirenderer", repo_id=repo)
-          print("✅ PIRenderer done")
-          
-          # 6. DPR
-          print("⏳ تحميل DPR...")
-          path = snapshot_download("h94/IP-Adapter-FaceID")
-          api.upload_folder(folder_path=path, path_in_repo="relighting/dpr", repo_id=repo)
-          print("✅ DPR done")
-          
-          # 7. IC-Light
-          print("⏳ تحميل IC-Light...")
-          path = snapshot_download("lllyasviel/IC-Light")
-          api.upload_folder(folder_path=path, path_in_repo="relighting/switchlight", repo_id=repo)
-          print("✅ IC-Light done")
+          for source, target in models:
+              print(f"⏳ تحميل {source}...")
+              try:
+                  path = snapshot_download(source)
+                  api.upload_folder(folder_path=path, path_in_repo=target, repo_id=repo)
+                  print(f"✅ {target} done")
+              except Exception as e:
+                  print(f"❌ {source} فشل: {e}")
           
           print("🚀 المرحلة الأولى اكتملت!")
           EOF
