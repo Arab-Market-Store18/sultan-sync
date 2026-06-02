@@ -1,47 +1,42 @@
-name: Sultan Final Models Sync
+name: Create New Folders in Sultan Models
 on:
   workflow_dispatch:
 
 jobs:
-  transfer:
+  create-folders:
     runs-on: ubuntu-latest
     steps:
-      - name: Download Hybrid Models
+      - name: Create folders on Hugging Face
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # تجهيز المجلدات المؤقتة
-          mkdir -p detection segmentation
-          
-          # 1. سحب نموذج YOLOv11 (أحدث إصدار للكشف والوضعية)
-          wget -q https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11s-pose.pt -O detection/yolo11s-pose.pt
-          
-          # 2. سحب نموذج SAM 2 (أقوى نموذج عزل حالياً)
-          wget -q https://dl.fbaipublicfiles.com/segment_anything_2/072824/sam2_hiera_tiny.pt -O segmentation/sam2_tiny.pt
-          
-          echo "✅ تم سحب النماذج سحابياً بنجاح"
-
-          # رفع الملفات إلى Hugging Face
           pip install -q huggingface_hub
           
           python3 << 'EOF'
           import os
           from huggingface_hub import HfApi
+          
           api = HfApi(token=os.environ["HF_TOKEN"])
           repo_id = "shababdd11/sultan-models"
           
-          # رفع نموذج الـ Detection
-          api.upload_file(
-              path_or_fileobj="detection/yolo11s-pose.pt",
-              path_in_repo="detection/yolo11s-pose.pt",
-              repo_id=repo_id
-          )
+          folders = [
+              "analysis/.gitkeep",
+              "generation/.gitkeep",
+              "relighting/.gitkeep",
+          ]
           
-          # رفع نموذج الـ Segmentation
-          api.upload_file(
-              path_or_fileobj="segmentation/sam2_tiny.pt",
-              path_in_repo="segmentation/sam2_tiny.pt",
-              repo_id=repo_id
-          )
-          print("🚀 النماذج الهجينة أصبحت الآن في مستودعك!")
+          for folder in folders:
+              # إنشاء ملف مؤقت
+              with open(".gitkeep", "w") as f:
+                  f.write("")
+              
+              api.upload_file(
+                  path_or_fileobj=".gitkeep",
+                  path_in_repo=folder,
+                  repo_id=repo_id,
+                  commit_message=f"إنشاء مجلد {folder.split('/')[0]}"
+              )
+              print(f"✅ تم إنشاء {folder}")
+          
+          print("🚀 تم إنشاء جميع المجلدات الجديدة بنجاح!")
           EOF
