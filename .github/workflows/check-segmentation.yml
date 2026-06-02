@@ -1,0 +1,30 @@
+name: Check segmentation folder
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install tools
+        run: pip install -q huggingface_hub
+
+      - name: Check segmentation
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python3 << 'EOF'
+          import os
+          from huggingface_hub import HfApi
+          
+          api = HfApi(token=os.environ["HF_TOKEN"])
+          repo = "shababdd11/sultan-models"
+          
+          print("📁 محتويات مجلد segmentation:")
+          files = api.list_repo_files(repo, path_in_repo="segmentation")
+          for f in files:
+              print(f"  - {f}")
+          
+          print(f"\n📊 عدد الملفات: {len(files)}")
+          print("🚀 تم!")
+          EOF
