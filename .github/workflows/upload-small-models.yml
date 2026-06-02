@@ -20,49 +20,43 @@ jobs:
           api = HfApi(token=os.environ["HF_TOKEN"])
           repo = "shababdd11/sultan-models"
           
-          # 1. CLIP
+          # 1. CLIP - تم بنجاح
           print("⏳ تحميل CLIP...")
           path = snapshot_download("openai/clip-vit-base-patch32")
           api.upload_folder(folder_path=path, path_in_repo="analysis/clip-vit-base-patch32", repo_id=repo)
           print("✅ CLIP done")
           
-          # 2. MediaPipe Face Landmarker
-          print("⏳ تحميل MediaPipe...")
-          path = snapshot_download("google/mediapipe")
-          api.upload_folder(folder_path=path, path_in_repo="analysis/mediapipe-face-landmarker", repo_id=repo)
-          print("✅ MediaPipe done")
-          
-          # 3. U2Net
+          # 2. U2Net
           print("⏳ تحميل U2Net...")
           path = snapshot_download("nielsr/u2net")
           api.upload_folder(folder_path=path, path_in_repo="segmentation/u2net", repo_id=repo)
           print("✅ U2Net done")
           
-          # 4. U2Net Portrait (عبر RMBG-1.4)
+          # 3. U2Net Portrait
           print("⏳ تحميل U2Net Portrait...")
           path = snapshot_download("briaai/RMBG-1.4")
           api.upload_folder(folder_path=path, path_in_repo="segmentation/u2net-portrait", repo_id=repo)
           print("✅ U2Net Portrait done")
           
-          # 5. BiRefNet
+          # 4. BiRefNet
           print("⏳ تحميل BiRefNet...")
           path = snapshot_download("ZhengPeng7/BiRefNet")
           api.upload_folder(folder_path=path, path_in_repo="segmentation/birefnet", repo_id=repo)
           print("✅ BiRefNet done")
           
-          # 6. PIRenderer
+          # 5. PIRenderer
           print("⏳ تحميل PIRenderer...")
           path = snapshot_download("tobecwb/PIRenderer")
           api.upload_folder(folder_path=path, path_in_repo="pose/pirenderer", repo_id=repo)
           print("✅ PIRenderer done")
           
-          # 7. DPR
+          # 6. DPR
           print("⏳ تحميل DPR...")
           path = snapshot_download("h94/IP-Adapter-FaceID")
           api.upload_folder(folder_path=path, path_in_repo="relighting/dpr", repo_id=repo)
           print("✅ DPR done")
           
-          # 8. SwitchLight (IC-Light البديل)
+          # 7. IC-Light
           print("⏳ تحميل IC-Light...")
           path = snapshot_download("lllyasviel/IC-Light")
           api.upload_folder(folder_path=path, path_in_repo="relighting/switchlight", repo_id=repo)
