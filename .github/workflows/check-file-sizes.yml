@@ -23,8 +23,9 @@ jobs:
           info = model_info(repo, token=os.environ["HF_TOKEN"])
           
           for sibling in info.siblings:
-              if sibling.size > 0:
-                  print(f"✅ {sibling.rfilename} - {sibling.size / 1e6:.1f} MB")
+              size = sibling.size or 0
+              if size > 0:
+                  print(f"✅ {sibling.rfilename} - {size / 1e6:.1f} MB")
               else:
                   print(f"⚠️  {sibling.rfilename} - 0 bytes (فارغ)")
           
