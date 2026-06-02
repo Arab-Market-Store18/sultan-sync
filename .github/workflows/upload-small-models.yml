@@ -1,4 +1,4 @@
-name: Upload Small Models Phase 1
+name: Upload Remaining Models Phase 1
 on:
   workflow_dispatch:
 
@@ -21,10 +21,7 @@ jobs:
           repo = "shababdd11/sultan-models"
           
           models = [
-              ("openai/clip-vit-base-patch32", "analysis/clip-vit-base-patch32"),
-              ("briaai/RMBG-1.4", "segmentation/u2net-portrait"),
-              ("h94/IP-Adapter-FaceID", "relighting/dpr"),
-              ("lllyasviel/IC-Light", "relighting/switchlight"),
+              ("ZhengPeng7/birefnet", "segmentation/birefnet"),
           ]
           
           for source, target in models:
@@ -34,7 +31,7 @@ jobs:
                   api.upload_folder(folder_path=path, path_in_repo=target, repo_id=repo)
                   print(f"✅ {target} done")
               except Exception as e:
-                  print(f"❌ {source} فشل: {e}")
+                  print(f"❌ {source} فشل")
           
-          print("🚀 المرحلة الأولى اكتملت!")
+          print("🚀 تم!")
           EOF
