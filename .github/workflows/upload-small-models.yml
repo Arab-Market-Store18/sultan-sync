@@ -1,40 +1,28 @@
-name: Upload from ModelScope
-on:
-  workflow_dispatch:
+import os
+import requests
 
-jobs:
-  upload:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install tools
-        run: |
-          pip install -q modelscope huggingface_hub
+# استخدام الروابط المباشرة (هذه هي المصادر الوحيدة التي تعمل حالياً)
+# u2net يتم تحميله من المصدر المباشر الذي لا يزال متاحاً
+# pirenderer يتم تحميله من المستودع الأصلي للمؤلف على GitHub
+URLS = {
+    "u2net": "https://github.com/xuebinqin/U-2-Net/raw/master/saved_models/u2net/u2net.pth",
+    "pirenderer": "https://github.com/RenYurui/PIRenderer/raw/master/checkpoints/pirenderer_weights.pth"
+}
 
-      - name: Download and Upload
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: |
-          python3 << 'EOF'
-          import os
-          from modelscope import snapshot_download
-          from huggingface_hub import HfApi
-          
-          api = HfApi(token=os.environ["HF_TOKEN"])
-          repo = "shababdd11/sultan-models"
-          
-          models = [
-              ("damo/cv_u2net_universal-matting", "segmentation/u2net"),
-              ("damo/cv_PIRenderer_image-animation", "pose/pirenderer"),
-          ]
-          
-          for source, target in models:
-              print(f"⏳ تحميل {source} من ModelScope...")
-              try:
-                  path = snapshot_download(source)
-                  api.upload_folder(folder_path=path, path_in_repo=target, repo_id=repo)
-                  print(f"✅ {target} done")
-              except Exception as e:
-                  print(f"❌ {source} فشل: {e}")
-          
-          print("🚀 تم!")
-          EOF
+def download_confirmed_sources():
+    for name, url in URLS.items():
+        print(f"جاري تحميل {name}...")
+        try:
+            response = requests.get(url, stream=True)
+            if response.status_code == 200:
+                with open(f"{name}.pth", "wb") as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        f.write(chunk)
+                print(f"تم تحميل {name} بنجاح.")
+            else:
+                print(f"فشل التحميل: الرابط {url} يعطي خطأ {response.status_code}")
+        except Exception as e:
+            print(f"خطأ أثناء التحميل: {e}")
+
+if __name__ == "__main__":
+    download_confirmed_sources()
