@@ -1,4 +1,4 @@
-name: Upload Remaining Models Phase 1
+name: Upload Remaining Models
 on:
   workflow_dispatch:
 
@@ -21,7 +21,8 @@ jobs:
           repo = "shababdd11/sultan-models"
           
           models = [
-              ("ZhengPeng7/birefnet", "segmentation/birefnet"),
+              ("nielsr/u2net", "segmentation/u2net"),
+              ("tobecwb/PIRenderer", "pose/pirenderer"),
           ]
           
           for source, target in models:
@@ -31,7 +32,7 @@ jobs:
                   api.upload_folder(folder_path=path, path_in_repo=target, repo_id=repo)
                   print(f"✅ {target} done")
               except Exception as e:
-                  print(f"❌ {source} فشل")
+                  print(f"❌ {source} غير موجود")
           
           print("🚀 تم!")
           EOF
