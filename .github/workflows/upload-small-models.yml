@@ -1,4 +1,4 @@
-name: Upload Remaining Models
+name: Upload from ModelScope
 on:
   workflow_dispatch:
 
@@ -7,32 +7,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install tools
-        run: pip install -q huggingface_hub
+        run: |
+          pip install -q modelscope huggingface_hub
 
-      - name: Download and Upload Models
+      - name: Download and Upload
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           python3 << 'EOF'
           import os
-          from huggingface_hub import HfApi, snapshot_download
+          from modelscope import snapshot_download
+          from huggingface_hub import HfApi
           
           api = HfApi(token=os.environ["HF_TOKEN"])
           repo = "shababdd11/sultan-models"
           
           models = [
-              ("nielsr/u2net", "segmentation/u2net"),
-              ("tobecwb/PIRenderer", "pose/pirenderer"),
+              ("damo/cv_u2net_universal-matting", "segmentation/u2net"),
+              ("damo/cv_PIRenderer_image-animation", "pose/pirenderer"),
           ]
           
           for source, target in models:
-              print(f"⏳ تحميل {source}...")
+              print(f"⏳ تحميل {source} من ModelScope...")
               try:
                   path = snapshot_download(source)
                   api.upload_folder(folder_path=path, path_in_repo=target, repo_id=repo)
                   print(f"✅ {target} done")
               except Exception as e:
-                  print(f"❌ {source} غير موجود")
+                  print(f"❌ {source} فشل: {e}")
           
           print("🚀 تم!")
           EOF
