@@ -1,0 +1,32 @@
+name: Check All File Sizes
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install tools
+        run: pip install -q huggingface_hub
+
+      - name: Get Sizes
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python3 << 'EOF'
+          import os
+          from huggingface_hub import HfApi, model_info
+          
+          api = HfApi(token=os.environ["HF_TOKEN"])
+          repo = "shababdd11/sultan-models"
+          
+          info = model_info(repo, token=os.environ["HF_TOKEN"])
+          
+          for sibling in info.siblings:
+              if sibling.size > 0:
+                  print(f"✅ {sibling.rfilename} - {sibling.size / 1e6:.1f} MB")
+              else:
+                  print(f"⚠️  {sibling.rfilename} - 0 bytes (فارغ)")
+          
+          print("🚀 تم!")
+          EOF
