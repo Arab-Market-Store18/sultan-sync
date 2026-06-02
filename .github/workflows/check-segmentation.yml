@@ -21,10 +21,10 @@ jobs:
           repo = "shababdd11/sultan-models"
           
           print("📁 محتويات مجلد segmentation:")
-          files = api.list_repo_files(repo, path_in_repo="segmentation")
+          files = api.list_repo_files(repo)
           for f in files:
-              print(f"  - {f}")
+              if f.startswith("segmentation/"):
+                  print(f"  - {f}")
           
-          print(f"\n📊 عدد الملفات: {len(files)}")
           print("🚀 تم!")
           EOF
