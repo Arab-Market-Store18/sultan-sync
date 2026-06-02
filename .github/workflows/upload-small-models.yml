@@ -1,0 +1,25 @@
+name: Upload Small Models Phase 1
+on:
+  workflow_dispatch:
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install tools
+        run: pip install -q huggingface_hub
+
+      - name: Download and Upload CLIP
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python3 << 'EOF'
+          from huggingface_hub import HfApi, snapshot_download
+          api = HfApi(token=os.environ["HF_TOKEN"])
+          repo = "shababdd11/sultan-models"
+          
+          # CLIP
+          path = snapshot_download("openai/clip-vit-base-patch32")
+          api.upload_folder(folder_path=path, path_in_repo="analysis/clip-vit-base-patch32", repo_id=repo)
+          print("✅ CLIP done")
+          EOF
