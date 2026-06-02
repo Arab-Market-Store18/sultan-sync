@@ -1,28 +1,55 @@
-import os
-import requests
+name: Download u2net and pirenderer from GitHub
+on:
+  workflow_dispatch:
 
-# استخدام الروابط المباشرة (هذه هي المصادر الوحيدة التي تعمل حالياً)
-# u2net يتم تحميله من المصدر المباشر الذي لا يزال متاحاً
-# pirenderer يتم تحميله من المستودع الأصلي للمؤلف على GitHub
-URLS = {
-    "u2net": "https://github.com/xuebinqin/U-2-Net/raw/master/saved_models/u2net/u2net.pth",
-    "pirenderer": "https://github.com/RenYurui/PIRenderer/raw/master/checkpoints/pirenderer_weights.pth"
-}
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install requests
+        run: pip install -q requests huggingface_hub
 
-def download_confirmed_sources():
-    for name, url in URLS.items():
-        print(f"جاري تحميل {name}...")
-        try:
-            response = requests.get(url, stream=True)
-            if response.status_code == 200:
-                with open(f"{name}.pth", "wb") as f:
-                    for chunk in response.iter_content(chunk_size=8192):
-                        f.write(chunk)
-                print(f"تم تحميل {name} بنجاح.")
-            else:
-                print(f"فشل التحميل: الرابط {url} يعطي خطأ {response.status_code}")
-        except Exception as e:
-            print(f"خطأ أثناء التحميل: {e}")
+      - name: Download and Upload Models
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python3 << 'EOF'
+          import os
+          import requests
+          from huggingface_hub import HfApi
 
-if __name__ == "__main__":
-    download_confirmed_sources()
+          api = HfApi(token=os.environ["HF_TOKEN"])
+          repo = "shababdd11/sultan-models"
+
+          URLS = {
+              "u2net": "https://github.com/xuebinqin/U-2-Net/raw/master/saved_models/u2net/u2net.pth",
+              "pirenderer": "https://github.com/RenYurui/PIRenderer/raw/master/checkpoints/pirenderer_weights.pth"
+          }
+
+          targets = {
+              "u2net": "segmentation/u2net/u2net.pth",
+              "pirenderer": "pose/pirenderer/pirenderer.pth"
+          }
+
+          for name, url in URLS.items():
+              print(f"⏳ تحميل {name}...")
+              try:
+                  response = requests.get(url, stream=True, timeout=60)
+                  if response.status_code == 200:
+                      filepath = f"{name}.pth"
+                      with open(filepath, "wb") as f:
+                          for chunk in response.iter_content(chunk_size=8192):
+                              f.write(chunk)
+                      api.upload_file(
+                          path_or_fileobj=filepath,
+                          path_in_repo=targets[name],
+                          repo_id=repo
+                      )
+                      print(f"✅ {name} done")
+                  else:
+                      print(f"❌ {name} فشل: {response.status_code}")
+              except Exception as e:
+                  print(f"❌ {name} خطأ: {e}")
+          
+          print("🚀 تم!")
+          EOF
