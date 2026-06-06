@@ -1,4 +1,4 @@
-name: Download and Upload FLUX.2-klein-4B
+name: Download and Upload FLUX.2-klein-4B 
 on:
   workflow_dispatch:
 
