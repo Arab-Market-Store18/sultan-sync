@@ -1,0 +1,25 @@
+name: Upload FLUX GGUF
+on:
+  workflow_dispatch:
+
+jobs:
+  upload-gguf:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install tools
+        run: |
+          pip install huggingface-hub
+          sudo apt-get install -y git-lfs
+
+      - name: Download GGUF
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git lfs install
+          git clone https://huggingface.co/city96/FLUX.2-klein-4B-GGUF ./flux-gguf
+
+      - name: Upload to your repo
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          huggingface-cli upload shababdd11/sultan-models ./flux-gguf generation/flux2-klein-4b-gguf --repo-type=model
