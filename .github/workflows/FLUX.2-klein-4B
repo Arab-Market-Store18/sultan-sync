@@ -1,17 +1,29 @@
-name: Copy FLUX.2-klein-4B
+name: Upload FLUX GGUF
 on:
   workflow_dispatch:
 
 jobs:
-  copy-model:
+  upload-gguf:
     runs-on: ubuntu-latest
     steps:
-      - name: Install huggingface-cli
+      - name: Install huggingface-hub
         run: pip install huggingface-hub
 
-      - name: Copy model to sultan-models
+      - name: Download GGUF model with token
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          huggingface-cli download black-forest-labs/FLUX.2-klein-4B --local-dir ./temp_model
-          huggingface-cli upload shababdd11/sultan-models ./temp_model generation/flux2-klein-4b --repo-type=model
+          # تحميل النموذج باستخدام huggingface-cli مع التوكن
+          huggingface-cli download city96/FLUX.2-klein-4B-GGUF \
+            --local-dir ./flux-gguf \
+            --token ${{ secrets.HF_TOKEN }}
+
+      - name: Upload to your repo
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          # رفع الملفات إلى حسابك
+          huggingface-cli upload shababdd11/sultan-models \
+            ./flux-gguf \
+            generation/flux2-klein-4b-gguf \
+            --token ${{ secrets.HF_TOKEN }}
