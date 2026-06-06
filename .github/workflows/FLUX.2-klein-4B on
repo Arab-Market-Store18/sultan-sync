@@ -8,7 +8,7 @@ jobs:
     steps:
       - name: Install tools
         run: pip install -q huggingface_hub
-
+ 
       - name: Transfer FLUX 4B to sultan-models
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
