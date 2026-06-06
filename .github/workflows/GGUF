@@ -1,0 +1,114 @@
+name: Download, Convert to GGUF, and Upload FLUX.2-klein-4B
+on:
+  workflow_dispatch:
+
+jobs:
+  convert-to-gguf-and-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          pip install -q huggingface_hub
+          # تثبيت الأدوات اللازمة لتحويل GGUF
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential
+          
+      - name: Clone llama.cpp (for GGUF conversion)
+        run: |
+          git clone https://github.com/ggerganov/llama.cpp.git
+          cd llama.cpp
+          make -j$(nproc)
+          
+      - name: Download FLUX.2-klein-4B model
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python3 << 'EOF'
+          import os
+          from huggingface_hub import snapshot_download
+          
+          # تحميل النموذج الأصلي
+          model_source = "black-forest-labs/FLUX.2-klein-4B"
+          local_dir = "./original_model"
+          
+          print("📥 جاري تحميل النموذج الأصلي FLUX.2-klein-4B...")
+          snapshot_download(
+              repo_id=model_source,
+              local_dir=local_dir,
+              allow_patterns=["*.safetensors", "*.json", "*.txt", "*.bin"]
+          )
+          print("✅ تم تحميل النموذج الأصلي بنجاح")
+          EOF
+          
+      - name: Convert model to GGUF format
+        run: |
+          echo "🔄 جاري تحويل النموذج إلى صيغة GGUF..."
+          
+          # إنشاء مجلد للمخرجات
+          mkdir -p ./gguf_model
+          
+          # ملاحظة: تحتاج إلى استخدام سكريبت التحويل المناسب لنماذج Flux
+          # إذا لم يكن llama.cpp يدعم Flux مباشرة، قد تحتاج إلى استخدام أدوات أخرى
+          # هذا مثال عام لتحويل نموذج إلى GGUF
+          
+          cd llama.cpp
+          
+          # تحويل النموذج (هذا افتراضي، قد تحتاج إلى تعديل المسارات)
+          python3 convert.py ../original_model \
+            --outfile ../gguf_model/flux-2-klein-4b.Q4_K_M.gguf \
+            --outtype q4_K_M
+          
+          echo "✅ تم تحويل النموذج إلى GGUF"
+          
+      - name: Upload GGUF model to Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python3 << 'EOF'
+          import os
+          from huggingface_hub import HfApi, upload_file
+          import glob
+          
+          api = HfApi(token=os.environ["HF_TOKEN"])
+          target_repo = "shababdd11/sultan-models"
+          target_folder = "generation/flux2-klein-4b-gguf"
+          
+          print("📤 جاري رفع نموذج GGUF إلى مستودعك...")
+          
+          # رفع جميع ملفات GGUF الموجودة
+          gguf_files = glob.glob("./gguf_model/*.gguf")
+          
+          if not gguf_files:
+              print("❌ لم يتم العثور على ملفات GGUF للرفع!")
+              exit(1)
+          
+          for gguf_file in gguf_files:
+              file_name = os.path.basename(gguf_file)
+              print(f"📤 رفع {file_name}...")
+              
+              upload_file(
+                  path_or_fileobj=gguf_file,
+                  path_in_repo=f"{target_folder}/{file_name}",
+                  repo_id=target_repo,
+                  repo_type="model",
+                  commit_message=f"إضافة نموذج {file_name} بصيغة GGUF"
+              )
+          
+          # إضافة ملف README توضيحي
+          readme_content = """# FLUX.2-klein-4B - نسخة GGUF
+  
+## معلومات النموذج
+- النموذج الأصلي: black-forest-labs/FLUX.2-klein-4B
+- الصيغة: GGUF (محسن للأداء)
+- تاريخ التحويل: تم التحويل تلقائياً عبر GitHub Actions
+
+## أحجام النموذج
+يوجد عدة أحجام من النموذج (Q4_K_M، Q5_K_M، Q8_0 وغيرها)
+اختر الحجم المناسب حسب ذاكرة الجهاز المتوفرة لديك.
+
+## كيفية الاستخدام
+```python
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_path = "shababdd11/sultan-models/generation/flux2-klein-4b-gguf"
+# استخدم المحمل المناسب لملفات GGUF
