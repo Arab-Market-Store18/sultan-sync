@@ -1,0 +1,17 @@
+name: Copy FLUX.2-klein-4B
+on:
+  workflow_dispatch:
+
+jobs:
+  copy-model:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install huggingface-cli
+        run: pip install huggingface-hub
+
+      - name: Copy model to sultan-models
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          huggingface-cli download black-forest-labs/FLUX.2-klein-4B --local-dir ./temp_model
+          huggingface-cli upload shababdd11/sultan-models ./temp_model generation/flux2-klein-4b --repo-type=model
