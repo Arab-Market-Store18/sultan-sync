@@ -1,48 +1,45 @@
-name: Download and Upload FLUX.2-klein-4B 
+name: Transfer FLUX.2-klein-4B GGUF
 on:
   workflow_dispatch:
 
 jobs:
-  transfer-4b-model:
+  transfer:
     runs-on: ubuntu-latest
     steps:
-      - name: Install tools
-        run: pip install -q huggingface_hub
- 
-      - name: Transfer FLUX 4B to sultan-models
+      - name: Install huggingface_hub
+        run: pip install huggingface_hub
+
+      - name: Download and Upload FLUX.2-klein-4B GGUF
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           python3 << 'EOF'
           import os
-          from huggingface_hub import snapshot_download, HfApi
-          
+          from huggingface_hub import hf_hub_download, HfApi
+              
           api = HfApi(token=os.environ["HF_TOKEN"])
           target_repo = "shababdd11/sultan-models"
-          
-          # ==========================================
-          # 1. النموذج الأساسي (النسخة الرسمية الأصغر 4B)
-          # ==========================================
-          base_model_source = "black-forest-labs/FLUX.2-klein-4B" 
-          base_target_folder = "generation/flux2-klein-4b"
-          
-          print(f"📥 جاري تحميل نموذج FLUX.2-klein-4B...")
-          # نحمل ملفات safetensors الآمنة وملفات الإعدادات فقط
-          base_local_dir = snapshot_download(
-              repo_id=base_model_source,
-              allow_patterns=["*.safetensors", "*.json", "*.txt"], 
-              ignore_patterns=["*.bin", "*.msgpack", "*.h5"], # تجاهل الأوزان القديمة لتوفير المساحة
-              local_dir="./temp_flux4b"
+              
+          # معلومات نموذج FLUX GGUF
+          flux_gguf_source_repo = "unsloth/FLUX.2-klein-4B-GGUF"
+          flux_gguf_filename = "flux-2-klein-4b-Q5_K_M.gguf" # اختيار Q5_K_M كتوازن بين الحجم والجودة
+          flux_gguf_target_folder = "generation/flux2-klein-4b-gguf"
+              
+          print(f"📥 جاري تحميل نموذج FLUX GGUF: {flux_gguf_filename}...")
+          flux_gguf_local_path = hf_hub_download(
+              repo_id=flux_gguf_source_repo,
+              filename=flux_gguf_filename,
+              local_dir="./temp_flux_gguf"
           )
-          
-          print(f"📤 جاري رفع النموذج إلى مستودعك في: {base_target_folder}")
-          api.upload_folder(
-              folder_path=base_local_dir,
+              
+          print(f"📤 جاري رفع نموذج FLUX GGUF إلى مستودعك في: {flux_gguf_target_folder}")
+          api.upload_file(
+              path_or_fileobj=flux_gguf_local_path,
+              path_in_repo=f"{flux_gguf_target_folder}/{flux_gguf_filename}",
               repo_id=target_repo,
-              path_in_repo=base_target_folder,
               repo_type="model",
-              commit_message="إضافة النسخة الرسمية المصغرة FLUX.2-klein-4B"
+              commit_message=f"إضافة نموذج FLUX.2-klein-4B GGUF ({flux_gguf_filename})"
           )
-          
-          print("✅ تمت العملية بنجاح! النموذج 4B الآن في مستودعك.")
+              
+          print("✅ تمت العملية بنجاح! نموذج FLUX GGUF الآن في مستودعك.")
           EOF
