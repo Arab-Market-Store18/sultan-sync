@@ -1,0 +1,49 @@
+name: Download and Upload LoRA (4B Version)
+on:
+  workflow_dispatch:
+
+jobs:
+  transfer-lora-4b:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install tools
+        run: pip install -q huggingface_hub
+
+      - name: Transfer LoRA 4B to sultan-models
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python3 << 'EOF'
+          import os
+          from huggingface_hub import hf_hub_download, HfApi
+          
+          api = HfApi(token=os.environ["HF_TOKEN"])
+          target_repo = "shababdd11/sultan-models"
+          
+          # ==========================================
+          # 2. النموذج المساعد (LoRA المخصص لنسخة 4B)
+          # ==========================================
+          lora_source_repo = "Alissonerdx/BFS-Best-Face-Swap"
+          # تم تغيير اسم الملف إلى النسخة المخصصة لـ 4B
+          lora_filename = "bfs_head_v1_flux-klein_4b.safetensors" 
+          lora_target_folder = "swap/bfs-face-swap"
+          
+          print(f"📥 جاري تحميل نموذج LoRA المخصص لـ 4B...")
+          lora_local_path = hf_hub_download(
+              repo_id=lora_source_repo,
+              filename=lora_filename,
+              local_dir="./temp_lora"
+          )
+          
+          print(f"📤 جاري رفع نموذج LoRA إلى مستودعك في: {lora_target_folder}")
+          api.upload_file(
+              path_or_fileobj=lora_local_path,
+              path_in_repo=f"{lora_target_folder}/{lora_filename}",
+              repo_id=target_repo,
+              repo_type="model",
+              commit_message="إضافة نموذج BFS-Best-Face-Swap LoRA المخصص لـ FLUX 4B"
+          )
+          
+          print("✅ تمت العملية بنجاح! نموذج LoRA المخصص لـ 4B الآن في مستودعك.")
+          EOF
+
