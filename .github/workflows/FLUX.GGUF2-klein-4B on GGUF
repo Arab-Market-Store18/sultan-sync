@@ -1,4 +1,4 @@
-name: Transfer FLUX.2-klein-4B GGUF
+name: Transfer FLUX.2-klein-4B GGUF 
 on:
   workflow_dispatch:
 
