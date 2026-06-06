@@ -1,29 +1,48 @@
-name: Check All Sultan Models
+name: Download and Upload FLUX.2-klein-4B
 on:
   workflow_dispatch:
 
 jobs:
-  check:
+  transfer-4b-model:
     runs-on: ubuntu-latest
     steps:
       - name: Install tools
         run: pip install -q huggingface_hub
 
-      - name: List All Files
+      - name: Transfer FLUX 4B to sultan-models
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           python3 << 'EOF'
           import os
-          from huggingface_hub import HfApi
+          from huggingface_hub import snapshot_download, HfApi
           
           api = HfApi(token=os.environ["HF_TOKEN"])
-          repo = "shababdd11/sultan-models"
+          target_repo = "shababdd11/sultan-models"
           
-          print("📁 جميع محتويات sultan-models:\n")
-          files = api.list_repo_files(repo)
-          for f in sorted(files):
-              print(f"  {f}")
+          # ==========================================
+          # 1. النموذج الأساسي (النسخة الرسمية الأصغر 4B)
+          # ==========================================
+          base_model_source = "black-forest-labs/FLUX.2-klein-4B" 
+          base_target_folder = "generation/flux2-klein-4b"
           
-          print(f"\n📊 العدد الإجمالي: {len(files)}")
+          print(f"📥 جاري تحميل نموذج FLUX.2-klein-4B...")
+          # نحمل ملفات safetensors الآمنة وملفات الإعدادات فقط
+          base_local_dir = snapshot_download(
+              repo_id=base_model_source,
+              allow_patterns=["*.safetensors", "*.json", "*.txt"], 
+              ignore_patterns=["*.bin", "*.msgpack", "*.h5"], # تجاهل الأوزان القديمة لتوفير المساحة
+              local_dir="./temp_flux4b"
+          )
+          
+          print(f"📤 جاري رفع النموذج إلى مستودعك في: {base_target_folder}")
+          api.upload_folder(
+              folder_path=base_local_dir,
+              repo_id=target_repo,
+              path_in_repo=base_target_folder,
+              repo_type="model",
+              commit_message="إضافة النسخة الرسمية المصغرة FLUX.2-klein-4B"
+          )
+          
+          print("✅ تمت العملية بنجاح! النموذج 4B الآن في مستودعك.")
           EOF
