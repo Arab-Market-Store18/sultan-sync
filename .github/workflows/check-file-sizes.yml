@@ -4,7 +4,7 @@ on:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-lates
     steps:
       - name: Install tools
         run: pip install -q huggingface_hub
