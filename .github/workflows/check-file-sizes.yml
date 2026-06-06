@@ -1,0 +1,15 @@
+name: Check File Sizes
+on:
+  workflow_dispatch:
+
+jobs:
+  check-sizes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check file sizes
+        run: |
+          echo "جاري فحص أحجام الملفات..."
+          find . -type f -size +50M -exec ls -lh {} \;
