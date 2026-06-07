@@ -6,20 +6,44 @@ jobs:
   upload-gguf:
     runs-on: ubuntu-latest
     steps:
-      - name: Install tools
-        run: |
-          pip install huggingface-hub
-          sudo apt-get install -y git-lfs
+      - name: Install huggingface-hub
+        run: pip install huggingface-hub
 
-      - name: Download GGUF
+      - name: Download and upload GGUF
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git lfs install
-          git clone https://huggingface.co/city96/FLUX.2-klein-4B-GGUF ./flux-gguf
-
-      - name: Upload to your repo
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: |
-          huggingface-cli upload shababdd11/sultan-models ./flux-gguf generation/flux2-klein-4b-gguf --repo-type=model
+          python3 << 'PYTHON_SCRIPT'
+          import os
+          from huggingface_hub import snapshot_download, upload_folder
+          
+          token = os.environ.get("HF_TOKEN")
+          if not token:
+              raise ValueError("HF_TOKEN environment variable not set")
+          
+          print("📥 جاري تحميل نموذج GGUF...")
+          
+          # تحميل النموذج
+          local_dir = snapshot_download(
+              repo_id="city96/FLUX.2-klein-4B-GGUF",
+              token=token,
+              allow_patterns=["*.gguf", "*.md"],
+              local_dir="./flux-gguf",
+              local_dir_use_symlinks=False
+          )
+          
+          print(f"✅ تم التحميل إلى: {local_dir}")
+          print("📤 جاري رفع النموذج...")
+          
+          # رفع المجلد
+          upload_folder(
+              folder_path="./flux-gguf",
+              repo_id="shababdd11/sultan-models",
+              path_in_repo="generation/flux2-klein-4b-gguf",
+              repo_type="model",
+              token=token,
+              commit_message="إضافة نموذج FLUX GGUF"
+          )
+          
+          print("✅ تم الرفع بنجاح!")
+          PYTHON_SCRIPT
