@@ -23,12 +23,13 @@ jobs:
           
           print("📥 جاري تحميل نموذج GGUF...")
           
+          # ✅ تم تغيير اسم المستودع إلى الاسم الصحيح
           local_dir = snapshot_download(
-              repo_id="city96/FLUX.2-klein-4B-GGUF",
+              repo_id="mradermacher/FLUX.2-klein-4B-GGUF",  # <-- التغيير هنا
               token=token,
               allow_patterns=["*.gguf", "*.md"],
               local_dir="./flux-gguf",
-              local_dir_use_symlinks=False
+              # local_dir_use_symlinks=False  # يمكنك حذف هذا السطر لتجنب التحذير
           )
           
           print(f"✅ تم التحميل إلى: {local_dir}")
@@ -40,7 +41,7 @@ jobs:
               path_in_repo="generation/flux2-klein-4b-gguf",
               repo_type="model",
               token=token,
-              commit_message="إضافة نموذج FLUX GGUF"
+              commit_message="إضافة نموذج FLUX GGUF (من mradermacher)"
           )
           
           print("✅ تم الرفع بنجاح!")
