@@ -21,19 +21,18 @@ jobs:
           if not token:
               raise ValueError("HF_TOKEN environment variable not set")
           
-          print("📥 جاري تحميل نموذج GGUF...")
+          print("📥 جاري تحميل نموذج GGUF من unsloth...")
           
-          # ✅ تم تغيير اسم المستودع إلى الاسم الصحيح
+          # ✅ المستودع الصحيح الذي يحتوي على النموذج
           local_dir = snapshot_download(
-              repo_id="mradermacher/FLUX.2-klein-4B-GGUF",  # <-- التغيير هنا
+              repo_id="unsloth/FLUX.2-klein-4B-GGUF",  # <-- التصحيح النهائي
               token=token,
               allow_patterns=["*.gguf", "*.md"],
-              local_dir="./flux-gguf",
-              # local_dir_use_symlinks=False  # يمكنك حذف هذا السطر لتجنب التحذير
+              local_dir="./flux-gguf"
           )
           
           print(f"✅ تم التحميل إلى: {local_dir}")
-          print("📤 جاري رفع النموذج...")
+          print("📤 جاري رفع النموذج إلى مستودعك...")
           
           upload_folder(
               folder_path="./flux-gguf",
@@ -41,7 +40,7 @@ jobs:
               path_in_repo="generation/flux2-klein-4b-gguf",
               repo_type="model",
               token=token,
-              commit_message="إضافة نموذج FLUX GGUF (من mradermacher)"
+              commit_message="إضافة نموذج FLUX.2-klein-4B-GGUF من unsloth"
           )
           
           print("✅ تم الرفع بنجاح!")
