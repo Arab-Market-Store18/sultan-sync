@@ -1,0 +1,47 @@
+name: Upload FLUX GGUF
+on:
+  workflow_dispatch:
+
+jobs:
+  upload-gguf:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install huggingface-hub
+        run: pip install huggingface-hub
+
+      - name: Download and upload GGUF
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python3 << 'PYTHON_SCRIPT'
+          import os
+          from huggingface_hub import snapshot_download, upload_folder
+          
+          token = os.environ.get("HF_TOKEN")
+          if not token:
+              raise ValueError("HF_TOKEN environment variable not set")
+          
+          print("📥 جاري تحميل نموذج GGUF من unsloth...")
+          
+          # ✅ المستودع الصحيح الذي يحتوي على النموذج
+          local_dir = snapshot_download(
+              repo_id="unsloth/FLUX.2-klein-4B-GGUF",  # <-- التصحيح النهائي
+              token=token,
+              allow_patterns=["*.gguf", "*.md"],
+              local_dir="./flux-gguf"
+          )
+          
+          print(f"✅ تم التحميل إلى: {local_dir}")
+          print("📤 جاري رفع النموذج إلى مستودعك...")
+          
+          upload_folder(
+              folder_path="./flux-gguf",
+              repo_id="shababdd11/sultan-models",
+              path_in_repo="generation/flux2-klein-4b-gguf",
+              repo_type="model",
+              token=token,
+              commit_message="إضافة نموذج FLUX.2-klein-4B-GGUF من unsloth"
+          )
+          
+          print("✅ تم الرفع بنجاح!")
+          PYTHON_SCRIPT
