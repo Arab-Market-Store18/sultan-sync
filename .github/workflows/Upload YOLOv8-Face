@@ -1,7 +1,7 @@
 name: Upload YOLOv8-Face
 on:
   workflow_dispatch:
-
+ 
 jobs:
   upload-yolo:
     runs-on: ubuntu-latest
