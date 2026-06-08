@@ -1,47 +1,49 @@
-name: Upload FLUX GGUF
+name: Upload YOLOv8-Face
 on:
   workflow_dispatch:
 
 jobs:
-  upload-gguf:
+  upload-yolo:
     runs-on: ubuntu-latest
     steps:
       - name: Install huggingface-hub
         run: pip install huggingface-hub
 
-      - name: Download and upload GGUF
+      - name: Download and upload YOLOv8-Face
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           python3 << 'PYTHON_SCRIPT'
           import os
-          from huggingface_hub import snapshot_download, upload_folder
+          import requests
+          from huggingface_hub import upload_file
           
           token = os.environ.get("HF_TOKEN")
           if not token:
               raise ValueError("HF_TOKEN environment variable not set")
           
-          print("📥 جاري تحميل نموذج GGUF من unsloth...")
+          print("📥 جاري تحميل YOLOv8-Face...")
           
-          # ✅ المستودع الصحيح الذي يحتوي على النموذج
-          local_dir = snapshot_download(
-              repo_id="unsloth/FLUX.2-klein-4B-GGUF",  # <-- التصحيح النهائي
-              token=token,
-              allow_patterns=["*.gguf", "*.md"],
-              local_dir="./flux-gguf"
-          )
+          # الملف المصدر من المستودع الأصلي
+          url = "https://huggingface.co/arnabdhar/YOLOv8-Face-Detection/resolve/main/model.pt"
+          response = requests.get(url)
           
-          print(f"✅ تم التحميل إلى: {local_dir}")
-          print("📤 جاري رفع النموذج إلى مستودعك...")
-          
-          upload_folder(
-              folder_path="./flux-gguf",
-              repo_id="shababdd11/sultan-models",
-              path_in_repo="generation/flux2-klein-4b-gguf",
-              repo_type="model",
-              token=token,
-              commit_message="إضافة نموذج FLUX.2-klein-4B-GGUF من unsloth"
-          )
-          
-          print("✅ تم الرفع بنجاح!")
+          if response.status_code == 200:
+              # حفظ الملف باسم yolov8n-face.pt
+              with open("yolov8n-face.pt", "wb") as f:
+                  f.write(response.content)
+              print("✅ تم تحميل YOLOv8-Face")
+              
+              print("📤 جاري رفع الملف إلى مستودعك...")
+              upload_file(
+                  path_or_fileobj="yolov8n-face.pt",
+                  path_in_repo="detection/yolov8n-face.pt",
+                  repo_id="shababdd11/sultan-models",
+                  repo_type="model",
+                  token=token,
+                  commit_message="Add yolov8n-face.pt model"
+              )
+              print("✅ تم الرفع بنجاح!")
+          else:
+              print(f"❌ فشل التحميل: {response.status_code}")
           PYTHON_SCRIPT
