@@ -1,27 +1,21 @@
-name: Comfy-Env-Upload
+name: Create Checkpoints Folder
 on:
   workflow_dispatch:
 
 jobs:
-  upload:
+  setup:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Download Files
+      - name: Create Checkpoints Directory
         run: |
-          mkdir -p checkpoints vae clip
-          wget -q "https://huggingface.co/city96/FLUX.1-dev-fp8/resolve/main/flux1-dev-fp8.safetensors" -O "checkpoints/flux1-dev-fp8.safetensors"
-          wget -q "https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/ae.safetensors" -O "vae/ae.safetensors"
-          wget -q "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors" -O "clip/t5xxl_fp8_e4m3fn.safetensors"
-
-      - name: Git Upload
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: |
-          git config --global user.email "action@github.com"
+          mkdir -p checkpoints
+          touch checkpoints/.gitkeep
+          
+          git config --global user.email "bot@github.com"
           git config --global user.name "GitHub Action"
-          git add checkpoints/ vae/ clip/
-          git commit -m "Upload models via Git"
-          git push https://shababdd11:$HF_TOKEN@huggingface.co/datasets/shababdd11/sultan-comfy-env main
+          git add checkpoints/.gitkeep
+          git commit -m "Add checkpoints folder"
+          git push https://shababdd11:${{ secrets.HF_TOKEN }}@huggingface.co/shababdd11/sultan-comfy-env main
