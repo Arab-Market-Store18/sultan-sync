@@ -1,4 +1,4 @@
-name: Sultan ComfyEnv Uploader Fixed
+name: Sultan ComfyEnv Uploader
 on:
   workflow_dispatch:
 
@@ -7,50 +7,55 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install dependencies
-        run: pip install huggingface-hub requests
+        run: pip install huggingface-hub
 
-      - name: Upload to Private Repo
+      - name: Run Upload Script
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           python3 << 'PYTHON_SCRIPT'
           import os
-          import requests
-          from huggingface_hub import upload_file
+          from huggingface_hub import hf_hub_download, upload_file
 
           token = os.environ.get("HF_TOKEN")
-          headers = {"Authorization": f"Bearer {token}"} # هذا السطر هو مفتاح الحل
-          
-          files_to_upload = [
+          target_repo = "shababdd11/sultan-comfy-env"
+
+          files_to_sync = [
               {
-                  "url": "https://huggingface.co/comfyanonymous/flux_dev_fp8_safetensors/resolve/main/flux1-dev-fp8.safetensors",
+                  "repo": "comfyanonymous/flux_dev_fp8_safetensors",
+                  "filename": "flux1-dev-fp8.safetensors",
                   "dest": "checkpoints/flux1-dev-fp8.safetensors"
+              },
+              {
+                  "repo": "black-forest-labs/FLUX.1-schnell",
+                  "filename": "ae.safetensors",
+                  "dest": "vae/ae.safetensors"
+              },
+              {
+                  "repo": "comfyanonymous/flux_text_encoders",
+                  "filename": "t5xxl_fp8_e4m3fn.safetensors",
+                  "dest": "clip/t5xxl_fp8_e4m3fn.safetensors"
+              },
+              {
+                  "repo": "guozinan/PuLID",
+                  "filename": "pulid_flux_v0.9.1.safetensors",
+                  "dest": "pulid/pulid_flux_v0.9.1.safetensors"
               }
           ]
 
-          repo_id = "shababdd11/sultan-comfy-env"
-
-          for item in files_to_upload:
-              filename = item["dest"].split("/")[-1]
-              print(f"📥 جاري تحميل: {filename}...")
-              
-              # استخدام التوكن في التحميل
-              response = requests.get(item["url"], headers=headers, stream=True)
-              if response.status_code == 200:
-                  with open(filename, "wb") as f:
-                      for chunk in response.iter_content(chunk_size=1024*1024):
-                          if chunk: f.write(chunk)
-                  
+          for item in files_to_sync:
+              print(f"📥 جاري معالجة {item['filename']}...")
+              try:
+                  path = hf_hub_download(repo_id=item['repo'], filename=item['filename'], token=token)
                   print(f"📤 جاري الرفع إلى {item['dest']}...")
                   upload_file(
-                      path_or_fileobj=filename,
-                      path_in_repo=item["dest"],
-                      repo_id=repo_id,
+                      path_or_fileobj=path,
+                      path_in_repo=item['dest'],
+                      repo_id=target_repo,
                       token=token,
-                      commit_message=f"Upload {filename}"
+                      commit_message=f"Sync {item['filename']} to ComfyEnv"
                   )
-                  os.remove(filename)
                   print(f"✅ تم بنجاح: {item['dest']}")
-              else:
-                  print(f"❌ فشل التحميل: {response.status_code}")
+              except Exception as e:
+                  print(f"❌ خطأ في {item['filename']}: {e}")
           PYTHON_SCRIPT
