@@ -1,4 +1,4 @@
-name: Create Checkpoints Folder
+name: Add Folder Safely
 on:
   workflow_dispatch:
 
@@ -9,13 +9,19 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Create Checkpoints Directory
+      - name: Create and Push
         run: |
+          git config --global user.email "bot@github.com"
+          git config --global user.name "GitHub Action"
+          
+          # جلب آخر التحديثات من المستودع
+          git pull origin main
+          
+          # إنشاء المجلد وإضافة ملف .gitkeep
           mkdir -p checkpoints
           touch checkpoints/.gitkeep
           
-          git config --global user.email "bot@github.com"
-          git config --global user.name "GitHub Action"
+          # رفع التغييرات
           git add checkpoints/.gitkeep
           git commit -m "Add checkpoints folder"
           git push https://shababdd11:${{ secrets.HF_TOKEN }}@huggingface.co/shababdd11/sultan-comfy-env main
