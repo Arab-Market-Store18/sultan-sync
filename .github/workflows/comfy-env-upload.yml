@@ -1,36 +1,10 @@
-name: Sultan ComfyEnv Uploader
+name: Comfy-Env-Upload
 on:
   workflow_dispatch:
 
 jobs:
-  upload-to-private-repo:
+  run-test:
     runs-on: ubuntu-latest
     steps:
-      - name: Download Files
-        run: |
-          mkdir -p checkpoints vae clip
-          echo "📥 جاري تحميل الملفات..."
-          wget -q --show-progress "https://huggingface.co/comfyanonymous/flux_dev_fp8_safetensors/resolve/main/flux1-dev-fp8.safetensors" -O "checkpoints/flux1-dev-fp8.safetensors"
-          wget -q --show-progress "https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/ae.safetensors" -O "vae/ae.safetensors"
-          wget -q --show-progress "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors" -O "clip/t5xxl_fp8_e4m3fn.safetensors"
-
-      - name: Upload Files
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: |
-          python3 -c "
-import os
-from huggingface_hub import HfApi
-api = HfApi(token=os.environ['HF_TOKEN'])
-repo = 'shababdd11/sultan-comfy-env'
-
-files = {
-    'checkpoints/flux1-dev-fp8.safetensors': 'checkpoints/flux1-dev-fp8.safetensors',
-    'vae/ae.safetensors': 'vae/ae.safetensors',
-    'clip/t5xxl_fp8_e4m3fn.safetensors': 'clip/t5xxl_fp8_e4m3fn.safetensors'
-}
-
-for remote, local in files.items():
-    print(f'📤 رفع {local} إلى {remote}...')
-    api.upload_file(path_or_fileobj=local, path_in_repo=remote, repo_id=repo)
-"
+      - name: Print Hello
+        run: echo "Hello Sultan"
