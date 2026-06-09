@@ -1,39 +1,32 @@
-name: Upload Large Files
+name: Upload Xet Model
 on:
   workflow_dispatch:
 
 jobs:
-  upload-to-hf:
+  upload-xet:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Install Xet
+        run: |
+          pip install git-xet
+          git xet install
 
-      - name: Install HF Hub
-        run: pip install huggingface_hub
-
-      - name: Upload File
+      - name: Clone and Upload
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          python -c "
-          from huggingface_hub import hf_hub_download, HfApi
-          import os
+          # تحميل المستودع باستخدام خوارزمية Xet
+          git clone https://huggingface.co/AiAF/flux1-dev-fp8.safetensors model_temp
           
-          print('Downloading...')
-          file_path = hf_hub_download(
-              repo_id='AIAF/flux1-dev-fp8', 
-              filename='flux1-dev-fp8.safetensors', 
-              token=os.environ['HF_TOKEN']
-          )
+          # إعداد المستودع الخاص بك للرفع
+          git clone https://shababdd11:${HF_TOKEN}@huggingface.co/shababdd11/sultan-comfy-env my_repo
+          mkdir -p my_repo/checkpoints
+          cp model_temp/flux1-dev-fp8.safetensors my_repo/checkpoints/
           
-          print('Uploading...')
-          api = HfApi()
-          api.upload_file(
-              path_or_fileobj=file_path,
-              path_in_repo='checkpoints/flux1-dev-fp8.safetensors',
-              repo_id='shababdd11/sultan-comfy-env',
-              token=os.environ['HF_TOKEN']
-          )
-          print('Done!')
-          "
+          # الرفع إلى مستودعك
+          cd my_repo
+          git config user.email "sultan@example.com"
+          git config user.name "Sultan"
+          git add checkpoints/flux1-dev-fp8.safetensors
+          git commit -m "Add Xet model"
+          git push
