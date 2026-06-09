@@ -1,4 +1,4 @@
-name: Add Folder Safely
+name: Force Add Folder
 on:
   workflow_dispatch:
 
@@ -9,19 +9,20 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Create and Push
+      - name: Create and Force Push
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           git config --global user.email "bot@github.com"
           git config --global user.name "GitHub Action"
           
-          # جلب آخر التحديثات من المستودع
-          git pull origin main
-          
-          # إنشاء المجلد وإضافة ملف .gitkeep
+          # إنشاء المجلد
           mkdir -p checkpoints
           touch checkpoints/.gitkeep
           
-          # رفع التغييرات
+          # إعداد التغييرات
           git add checkpoints/.gitkeep
           git commit -m "Add checkpoints folder"
-          git push https://shababdd11:${{ secrets.HF_TOKEN }}@huggingface.co/shababdd11/sultan-comfy-env main
+          
+          # الرفع القسري لتجاوز تعارض المسارات
+          git push -f https://shababdd11:$HF_TOKEN@huggingface.co/shababdd11/sultan-comfy-env main
