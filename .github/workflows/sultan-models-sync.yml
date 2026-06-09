@@ -1,0 +1,62 @@
+name: Sultan ComfyEnv Uploader
+on:
+  workflow_dispatch:
+
+jobs:
+  upload-to-private-repo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: pip install huggingface-hub requests
+
+      - name: Upload to Private Repo
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python3 << 'PYTHON_SCRIPT'
+          import os
+          from huggingface_hub import upload_file
+          import requests
+
+          # قائمة الملفات التي تريد رفعها
+          # استبدل الروابط والمسارات بما يناسب ملفات ComfyUI الخاصة بك
+          files_to_upload = [
+              {
+                  "url": "https://huggingface.co/comfyanonymous/flux_dev_fp8_safetensors/resolve/main/flux1-dev-fp8.safetensors",
+                  "dest": "checkpoints/flux1-dev-fp8.safetensors"
+              }
+              # أضف هنا أي ملفات أخرى بنفس الطريقة
+          ]
+
+          token = os.environ.get("HF_TOKEN")
+          repo_id = "shababdd11/sultan-comfy-env" # المستودع الخاص الجديد
+
+          for item in files_to_upload:
+              filename = item["dest"].split("/")[-1]
+              print(f"📥 جاري معالجة: {filename}")
+              
+              # تحميل الملف مؤقتاً
+              response = requests.get(item["url"], stream=True)
+              with open(filename, "wb") as f:
+                  for chunk in response.iter_content(chunk_size=8192):
+                      if chunk: f.write(chunk)
+              
+              # الرفع إلى المستودع الخاص
+              print(f"📤 جاري الرفع إلى {item['dest']}...")
+              try:
+                  upload_file(
+                      path_or_fileobj=filename,
+                      path_in_repo=item["dest"],
+                      repo_id=repo_id,
+                      repo_type="model",
+                      token=token,
+                      commit_message=f"Add {filename} to private environment"
+                  )
+                  print(f"✅ تم الرفع بنجاح: {item['dest']}")
+              except Exception as e:
+                  print(f"❌ خطأ في الرفع: {e}")
+              
+              if os.path.exists(filename):
+                  os.remove(filename)
+          
+          PYTHON_SCRIPT
