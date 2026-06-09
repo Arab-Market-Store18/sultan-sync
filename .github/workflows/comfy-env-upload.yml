@@ -3,15 +3,35 @@ on:
   workflow_dispatch:
 
 jobs:
-  upload-checkpoint:
+  upload-files:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Run script
+      - name: Download Files
+        run: |
+          mkdir -p checkpoints vae clip
+          wget -q --show-progress "https://huggingface.co/comfyanonymous/flux_dev_fp8_safetensors/resolve/main/flux1-dev-fp8.safetensors" -O "checkpoints/flux1-dev-fp8.safetensors"
+          wget -q --show-progress "https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/ae.safetensors" -O "vae/ae.safetensors"
+          wget -q --show-progress "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors" -O "clip/t5xxl_fp8_e4m3fn.safetensors"
+
+      - name: Upload Files
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           pip install huggingface-hub
-          python3 -c "from huggingface_hub import hf_hub_download; import os, shutil; path = hf_hub_download(repo_id='city96/FLUX.1-dev-fp8', filename='flux1-dev-fp8.safetensors', token=os.environ['HF_TOKEN']); os.makedirs('checkpoints', exist_ok=True); shutil.move(path, 'checkpoints/flux1-dev-fp8.safetensors'); print('Done!')"
+          python3 -c "
+import os
+from huggingface_hub import HfApi
+api = HfApi(token=os.environ['HF_TOKEN'])
+repo = 'shababdd11/sultan-comfy-env'
+files = {
+    'checkpoints/flux1-dev-fp8.safetensors': 'checkpoints/flux1-dev-fp8.safetensors',
+    'vae/ae.safetensors': 'vae/ae.safetensors',
+    'clip/t5xxl_fp8_e4m3fn.safetensors': 'clip/t5xxl_fp8_e4m3fn.safetensors'
+}
+for remote, local in files.items():
+    print(f'📤 رفع {local} إلى {remote}...')
+    api.upload_file(path_or_fileobj=local, path_in_repo=remote, repo_id=repo)
+"
