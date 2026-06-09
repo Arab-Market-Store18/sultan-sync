@@ -1,61 +1,37 @@
-name: Sultan ComfyEnv Uploader
+name: Sultan Checkpoint Uploader
 on:
   workflow_dispatch:
 
 jobs:
-  upload-to-private-repo:
+  upload-only-checkpoints:
     runs-on: ubuntu-latest
     steps:
       - name: Install dependencies
         run: pip install huggingface-hub
 
-      - name: Run Upload Script
+      - name: Download Checkpoint
+        run: |
+          mkdir -p checkpoints
+          echo "📥 جاري تحميل النموذج الأساسي (هذا سيأخذ وقتاً)..."
+          wget -q --show-progress "https://huggingface.co/comfyanonymous/flux_dev_fp8_safetensors/resolve/main/flux1-dev-fp8.safetensors" -O "checkpoints/flux1-dev-fp8.safetensors"
+          
+          echo "📊 حجم الملف المحمل:"
+          ls -lh checkpoints/flux1-dev-fp8.safetensors
+
+      - name: Upload to Hugging Face
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          python3 << 'PYTHON_SCRIPT'
-          import os
-          from huggingface_hub import hf_hub_download, upload_file
+          python3 -c "
+import os
+from huggingface_hub import HfApi
+api = HfApi(token=os.environ['HF_TOKEN'])
+repo = 'shababdd11/sultan-comfy-env'
 
-          token = os.environ.get("HF_TOKEN")
-          target_repo = "shababdd11/sultan-comfy-env"
-
-          files_to_sync = [
-              {
-                  "repo": "comfyanonymous/flux_dev_fp8_safetensors",
-                  "filename": "flux1-dev-fp8.safetensors",
-                  "dest": "checkpoints/flux1-dev-fp8.safetensors"
-              },
-              {
-                  "repo": "black-forest-labs/FLUX.1-schnell",
-                  "filename": "ae.safetensors",
-                  "dest": "vae/ae.safetensors"
-              },
-              {
-                  "repo": "comfyanonymous/flux_text_encoders",
-                  "filename": "t5xxl_fp8_e4m3fn.safetensors",
-                  "dest": "clip/t5xxl_fp8_e4m3fn.safetensors"
-              },
-              {
-                  "repo": "guozinan/PuLID",
-                  "filename": "pulid_flux_v0.9.1.safetensors",
-                  "dest": "pulid/pulid_flux_v0.9.1.safetensors"
-              }
-          ]
-
-          for item in files_to_sync:
-              print(f"📥 جاري معالجة {item['filename']}...")
-              try:
-                  path = hf_hub_download(repo_id=item['repo'], filename=item['filename'], token=token)
-                  print(f"📤 جاري الرفع إلى {item['dest']}...")
-                  upload_file(
-                      path_or_fileobj=path,
-                      path_in_repo=item['dest'],
-                      repo_id=target_repo,
-                      token=token,
-                      commit_message=f"Sync {item['filename']} to ComfyEnv"
-                  )
-                  print(f"✅ تم بنجاح: {item['dest']}")
-              except Exception as e:
-                  print(f"❌ خطأ في {item['filename']}: {e}")
-          PYTHON_SCRIPT
+print('📤 جاري رفع checkpoints/flux1-dev-fp8.safetensors...')
+api.upload_file(
+    path_or_fileobj='checkpoints/flux1-dev-fp8.safetensors', 
+    path_in_repo='checkpoints/flux1-dev-fp8.safetensors', 
+    repo_id=repo
+)
+"
