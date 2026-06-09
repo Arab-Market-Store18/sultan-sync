@@ -1,7 +1,7 @@
 name: Sultan Checkpoint Uploader
 on:
   workflow_dispatch:
-
+ 
 jobs:
   upload-only-checkpoints:
     runs-on: ubuntu-latest
