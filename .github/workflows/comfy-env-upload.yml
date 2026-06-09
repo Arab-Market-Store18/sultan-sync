@@ -6,24 +6,18 @@ jobs:
   upload-checkpoint:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Create Python Script
-        run: |
-          cat <<EOF > download.py
-          import os
-          import shutil
-          from huggingface_hub import hf_hub_download
-          path = hf_hub_download(repo_id='comfyanonymous/flux_dev_fp8_safetensors', filename='flux1-dev-fp8.safetensors', token=os.environ['HF_TOKEN'])
-          os.makedirs('checkpoints', exist_ok=True)
-          shutil.move(path, 'checkpoints/flux1-dev-fp8.safetensors')
-          print('Done')
-          EOF
-
-      - name: Run Script
+      - name: Install dependencies
+        run: pip install huggingface-hub
+      - name: Download and Move
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          pip install huggingface-hub
-          python3 download.py
+          python3 -c "
+from huggingface_hub import hf_hub_download
+import os
+import shutil
+path = hf_hub_download(repo_id='comfyanonymous/flux_dev_fp8_safetensors', filename='flux1-dev-fp8.safetensors', token=os.environ['HF_TOKEN'])
+os.makedirs('checkpoints', exist_ok=True)
+shutil.move(path, 'checkpoints/flux1-dev-fp8.safetensors')
+print('✅ تم التحميل بنجاح!')
+"
