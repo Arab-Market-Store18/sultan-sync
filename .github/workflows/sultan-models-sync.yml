@@ -1,0 +1,37 @@
+name: Sultan Checkpoint Uploader
+on:
+  workflow_dispatch:
+
+jobs:
+  upload-only-checkpoints:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: pip install huggingface-hub
+
+      - name: Download Checkpoint
+        run: |
+          mkdir -p checkpoints
+          echo "📥 جاري تحميل النموذج الأساسي (هذا سيأخذ وقتاً)..."
+          wget -q --show-progress "https://huggingface.co/comfyanonymous/flux_dev_fp8_safetensors/resolve/main/flux1-dev-fp8.safetensors" -O "checkpoints/flux1-dev-fp8.safetensors"
+          
+          echo "📊 حجم الملف المحمل:"
+          ls -lh checkpoints/flux1-dev-fp8.safetensors
+
+      - name: Upload to Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python3 -c "
+import os
+from huggingface_hub import HfApi
+api = HfApi(token=os.environ['HF_TOKEN'])
+repo = 'shababdd11/sultan-comfy-env'
+
+print('📤 جاري رفع checkpoints/flux1-dev-fp8.safetensors...')
+api.upload_file(
+    path_or_fileobj='checkpoints/flux1-dev-fp8.safetensors', 
+    path_in_repo='checkpoints/flux1-dev-fp8.safetensors', 
+    repo_id=repo
+)
+"
