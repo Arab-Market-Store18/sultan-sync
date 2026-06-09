@@ -6,20 +6,22 @@ jobs:
   upload:
     runs-on: ubuntu-latest
     steps:
-      - name: Prepare and Upload
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download Files
         run: |
-          # 1. إنشاء المجلدات المطلوبة تماماً كما تظهر في مستودعك
           mkdir -p checkpoints vae clip
-          
-          # 2. تحميل الملفات إلى أماكنها الصحيحة
           wget -q "https://huggingface.co/city96/FLUX.1-dev-fp8/resolve/main/flux1-dev-fp8.safetensors" -O "checkpoints/flux1-dev-fp8.safetensors"
           wget -q "https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/ae.safetensors" -O "vae/ae.safetensors"
           wget -q "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors" -O "clip/t5xxl_fp8_e4m3fn.safetensors"
-          
-          # 3. تثبيت ورفع
-          pip install huggingface-hub
-          hf auth login --token $HF_TOKEN
-          # رفع المجلدات الحالية إلى المستودع مباشرة
-          hf upload shababdd11/sultan-comfy-env . . --commit-message "Upload models"
+
+      - name: Git Upload
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git add checkpoints/ vae/ clip/
+          git commit -m "Upload models via Git"
+          git push https://shababdd11:$HF_TOKEN@huggingface.co/datasets/shababdd11/sultan-comfy-env main
