@@ -3,20 +3,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  upload-files:
+  upload:
     runs-on: ubuntu-latest
     steps:
-      - name: Download and Upload
+      - name: Process
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # 1. التحميل المباشر بـ wget
-          mkdir -p checkpoints vae clip
-          wget -q --show-progress "https://huggingface.co/comfyanonymous/flux_dev_fp8_safetensors/resolve/main/flux1-dev-fp8.safetensors" -O "checkpoints/flux1-dev-fp8.safetensors"
-          wget -q --show-progress "https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/ae.safetensors" -O "vae/ae.safetensors"
-          wget -q --show-progress "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors" -O "clip/t5xxl_fp8_e4m3fn.safetensors"
-
-          # 2. الرفع باستخدام huggingface-cli (أسهل وأضمن من البايثون)
           pip install huggingface-hub
-          huggingface-cli login --token $HF_TOKEN
-          huggingface-cli upload shababdd11/sultan-comfy-env . . --commit-message "Upload models"
+          python3 -c "import os; from huggingface_hub import hf_hub_download, HfApi; api = HfApi(token=os.environ['HF_TOKEN']); repo = 'shababdd11/sultan-comfy-env'; files = {'comfyanonymous/flux_dev_fp8_safetensors': 'flux1-dev-fp8.safetensors', 'black-forest-labs/FLUX.1-schnell': 'ae.safetensors', 'comfyanonymous/flux_text_encoders': 't5xxl_fp8_e4m3fn.safetensors'}; [api.upload_file(path_or_fileobj=hf_hub_download(repo_id=r, filename=f, token=os.environ['HF_TOKEN']), path_in_repo=f, repo_id=repo) for r, f in files.items()]"
