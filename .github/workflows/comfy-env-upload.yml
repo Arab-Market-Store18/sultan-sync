@@ -6,20 +6,20 @@ jobs:
   upload:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Download and Upload
+      - name: Prepare and Upload
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          mkdir -p models
-          # التحميل المباشر باستخدام curl
-          curl -L -o models/flux1-dev-fp8.safetensors "https://huggingface.co/city96/FLUX.1-dev-fp8/resolve/main/flux1-dev-fp8.safetensors"
-          curl -L -o models/ae.safetensors "https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/ae.safetensors"
-          curl -L -o models/t5xxl_fp8_e4m3fn.safetensors "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors"
+          # 1. إنشاء المجلدات المطلوبة تماماً كما تظهر في مستودعك
+          mkdir -p checkpoints vae clip
           
-          # الرفع المباشر
+          # 2. تحميل الملفات إلى أماكنها الصحيحة
+          wget -q "https://huggingface.co/city96/FLUX.1-dev-fp8/resolve/main/flux1-dev-fp8.safetensors" -O "checkpoints/flux1-dev-fp8.safetensors"
+          wget -q "https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/ae.safetensors" -O "vae/ae.safetensors"
+          wget -q "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors" -O "clip/t5xxl_fp8_e4m3fn.safetensors"
+          
+          # 3. تثبيت ورفع
           pip install huggingface-hub
-          huggingface-cli login --token $HF_TOKEN
-          huggingface-cli upload shababdd11/sultan-comfy-env models/ . --commit-message "Upload models"
+          hf auth login --token $HF_TOKEN
+          # رفع المجلدات الحالية إلى المستودع مباشرة
+          hf upload shababdd11/sultan-comfy-env . . --commit-message "Upload models"
