@@ -3,8 +3,21 @@ on:
   workflow_dispatch:
 
 jobs:
-  run-test:
+  upload-checkpoint:
     runs-on: ubuntu-latest
     steps:
-      - name: Print Hello
-        run: echo "Hello Sultan"
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Download File
+        run: |
+          mkdir -p checkpoints
+          wget -q --show-progress "https://huggingface.co/comfyanonymous/flux_dev_fp8_safetensors/resolve/main/flux1-dev-fp8.safetensors" -O "checkpoints/flux1-dev-fp8.safetensors"
+
+      - name: Upload to Repository
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add checkpoints/flux1-dev-fp8.safetensors
+          git commit -m "Add checkpoint file"
+          git push
