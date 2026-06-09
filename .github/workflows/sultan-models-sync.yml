@@ -1,4 +1,4 @@
-name: Sultan ComfyEnv Uploader
+name: Sultan ComfyEnv Uploader Fixed
 on:
   workflow_dispatch:
 
@@ -15,48 +15,42 @@ jobs:
         run: |
           python3 << 'PYTHON_SCRIPT'
           import os
-          from huggingface_hub import upload_file
           import requests
+          from huggingface_hub import upload_file
 
-          # قائمة الملفات التي تريد رفعها
-          # استبدل الروابط والمسارات بما يناسب ملفات ComfyUI الخاصة بك
+          token = os.environ.get("HF_TOKEN")
+          headers = {"Authorization": f"Bearer {token}"} # هذا السطر هو مفتاح الحل
+          
           files_to_upload = [
               {
                   "url": "https://huggingface.co/comfyanonymous/flux_dev_fp8_safetensors/resolve/main/flux1-dev-fp8.safetensors",
                   "dest": "checkpoints/flux1-dev-fp8.safetensors"
               }
-              # أضف هنا أي ملفات أخرى بنفس الطريقة
           ]
 
-          token = os.environ.get("HF_TOKEN")
-          repo_id = "shababdd11/sultan-comfy-env" # المستودع الخاص الجديد
+          repo_id = "shababdd11/sultan-comfy-env"
 
           for item in files_to_upload:
               filename = item["dest"].split("/")[-1]
-              print(f"📥 جاري معالجة: {filename}")
+              print(f"📥 جاري تحميل: {filename}...")
               
-              # تحميل الملف مؤقتاً
-              response = requests.get(item["url"], stream=True)
-              with open(filename, "wb") as f:
-                  for chunk in response.iter_content(chunk_size=8192):
-                      if chunk: f.write(chunk)
-              
-              # الرفع إلى المستودع الخاص
-              print(f"📤 جاري الرفع إلى {item['dest']}...")
-              try:
+              # استخدام التوكن في التحميل
+              response = requests.get(item["url"], headers=headers, stream=True)
+              if response.status_code == 200:
+                  with open(filename, "wb") as f:
+                      for chunk in response.iter_content(chunk_size=1024*1024):
+                          if chunk: f.write(chunk)
+                  
+                  print(f"📤 جاري الرفع إلى {item['dest']}...")
                   upload_file(
                       path_or_fileobj=filename,
                       path_in_repo=item["dest"],
                       repo_id=repo_id,
-                      repo_type="model",
                       token=token,
-                      commit_message=f"Add {filename} to private environment"
+                      commit_message=f"Upload {filename}"
                   )
-                  print(f"✅ تم الرفع بنجاح: {item['dest']}")
-              except Exception as e:
-                  print(f"❌ خطأ في الرفع: {e}")
-              
-              if os.path.exists(filename):
                   os.remove(filename)
-          
+                  print(f"✅ تم بنجاح: {item['dest']}")
+              else:
+                  print(f"❌ فشل التحميل: {response.status_code}")
           PYTHON_SCRIPT
