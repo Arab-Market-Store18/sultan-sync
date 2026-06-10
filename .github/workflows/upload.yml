@@ -1,4 +1,4 @@
-name: Upload Flux Model Direct
+name: Upload Flux Model with LFS
 on:
   workflow_dispatch:
 
@@ -6,16 +6,38 @@ jobs:
   upload-model:
     runs-on: ubuntu-latest
     steps:
-      - name: Install huggingface_hub
+      - name: Install Git LFS
         run: |
-          pip install huggingface_hub
+          sudo apt-get update
+          sudo apt-get install git-lfs
+          git lfs install
 
-      - name: Download and upload
+      - name: Clone and setup destination
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # تحميل النموذج
-          wget https://huggingface.co/Comfy-Org/flux1-dev/resolve/main/flux1-dev-fp8.safetensors
+          git clone https://shababdd11:${HF_TOKEN}@huggingface.co/shababdd11/sultan-comfy-env my_repo
+          cd my_repo
+          git lfs track "*.safetensors"
+          git add .gitattributes
+          git config user.email "sultan@example.com"
+          git config user.name "Sultan"
+
+      - name: Pull and push model
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          cd my_repo
+          mkdir -p checkpoints
           
-          # رفع مباشر إلى مستودعك
-          huggingface-cli upload shababdd11/sultan-comfy-env flux1-dev-fp8.safetensors checkpoints/flux1-dev-fp8.safetensors --token ${{ secrets.HF_TOKEN }}
+          # سحب الملف من مستودع المصدر باستخدام Git LFS
+          git clone https://huggingface.co/Comfy-Org/flux1-dev temp_repo
+          cd temp_repo
+          git lfs pull
+          cp flux1-dev-fp8.safetensors ../checkpoints/
+          cd ..
+          
+          # رفع إلى مستودعك
+          git add checkpoints/flux1-dev-fp8.safetensors
+          git commit -m "Add Flux FP8 model"
+          git push origin main
