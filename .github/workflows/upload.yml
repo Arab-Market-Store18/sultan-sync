@@ -1,32 +1,21 @@
-name: Upload Xet Model
+name: Upload Flux Model Direct
 on:
   workflow_dispatch:
 
 jobs:
-  upload-xet:
+  upload-model:
     runs-on: ubuntu-latest
     steps:
-      - name: Install Xet
+      - name: Install huggingface_hub
         run: |
-          pip install git-xet
-          git xet install
+          pip install huggingface_hub
 
-      - name: Clone and Upload
+      - name: Download and upload
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # تحميل المستودع باستخدام خوارزمية Xet
-          git clone https://huggingface.co/AiAF/flux1-dev-fp8.safetensors model_temp
+          # تحميل النموذج
+          wget https://huggingface.co/Comfy-Org/flux1-dev/resolve/main/flux1-dev-fp8.safetensors
           
-          # إعداد المستودع الخاص بك للرفع
-          git clone https://shababdd11:${HF_TOKEN}@huggingface.co/shababdd11/sultan-comfy-env my_repo
-          mkdir -p my_repo/checkpoints
-          cp model_temp/flux1-dev-fp8.safetensors my_repo/checkpoints/
-          
-          # الرفع إلى مستودعك
-          cd my_repo
-          git config user.email "sultan@example.com"
-          git config user.name "Sultan"
-          git add checkpoints/flux1-dev-fp8.safetensors
-          git commit -m "Add Xet model"
-          git push
+          # رفع مباشر إلى مستودعك
+          huggingface-cli upload shababdd11/sultan-comfy-env flux1-dev-fp8.safetensors checkpoints/flux1-dev-fp8.safetensors --token ${{ secrets.HF_TOKEN }}
