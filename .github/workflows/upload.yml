@@ -1,12 +1,12 @@
-name: Explore sultan-comfy-env
+name: Show Model Tree Structure
 on:
   workflow_dispatch:
 
 jobs:
-  explore-repo:
+  show-tree:
     runs-on: ubuntu-latest
     steps:
-      - name: Clone repository (metadata only)
+      - name: Clone and show tree
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
@@ -14,12 +14,6 @@ jobs:
             https://shababdd11:${HF_TOKEN}@huggingface.co/shababdd11/sultan-comfy-env
           cd sultan-comfy-env
           echo "========================================="
-          echo "📁 جميع المجلدات والملفات:"
+          echo "🌳 هيكل النماذج:"
           echo "========================================="
-          find . -type f | sort
-          echo ""
-          echo "========================================="
-          echo "📊 الإحصائيات:"
-          echo "========================================="
-          echo "عدد المجلدات: $(find . -type d | wc -l)"
-          echo "عدد الملفات: $(find . -type f | wc -l)"
+          find . -type f -name "*.safetensors" -o -name "*.bin" -o -name "*.ckpt" | sed 's|[^/]*/| |g'
