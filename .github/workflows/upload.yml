@@ -1,43 +1,25 @@
-name: Upload Flux Model with LFS
+name: Explore sultan-comfy-env
 on:
   workflow_dispatch:
 
 jobs:
-  upload-model:
+  explore-repo:
     runs-on: ubuntu-latest
     steps:
-      - name: Install Git LFS
-        run: |
-          sudo apt-get update
-          sudo apt-get install git-lfs
-          git lfs install
-
-      - name: Clone and setup destination
+      - name: Clone repository (metadata only)
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git clone https://shababdd11:${HF_TOKEN}@huggingface.co/shababdd11/sultan-comfy-env my_repo
-          cd my_repo
-          git lfs track "*.safetensors"
-          git add .gitattributes
-          git config user.email "sultan@example.com"
-          git config user.name "Sultan"
-
-      - name: Pull and push model
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: |
-          cd my_repo
-          mkdir -p checkpoints
-          
-          # سحب الملف من مستودع المصدر باستخدام Git LFS
-          git clone https://huggingface.co/Comfy-Org/flux1-dev temp_repo
-          cd temp_repo
-          git lfs pull
-          cp flux1-dev-fp8.safetensors ../checkpoints/
-          cd ..
-          
-          # رفع إلى مستودعك
-          git add checkpoints/flux1-dev-fp8.safetensors
-          git commit -m "Add Flux FP8 model"
-          git push origin main
+          git clone --depth 1 --filter=blob:none \
+            https://shababdd11:${HF_TOKEN}@huggingface.co/shababdd11/sultan-comfy-env
+          cd sultan-comfy-env
+          echo "========================================="
+          echo "📁 جميع المجلدات والملفات:"
+          echo "========================================="
+          find . -type f | sort
+          echo ""
+          echo "========================================="
+          echo "📊 الإحصائيات:"
+          echo "========================================="
+          echo "عدد المجلدات: $(find . -type d | wc -l)"
+          echo "عدد الملفات: $(find . -type f | wc -l)"
