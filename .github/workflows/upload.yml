@@ -1,10 +1,10 @@
-name: Show Model Tree
+name: Upload Missing Models
 
 on:
   workflow_dispatch:
 
 jobs:
-  show-tree:
+  upload-models:
     runs-on: ubuntu-latest
     steps:
       - name: Install git-lfs
@@ -13,56 +13,40 @@ jobs:
           sudo apt-get install -y git-lfs
           git lfs install
       
-      - name: Clone repository without LFS filters
+      - name: Clone and upload models
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # استنساخ بدون استخدام مرشحات LFS (GIT_LFS_SKIP_SMUDGE)
-          GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 \
-            https://shababdd11:${HF_TOKEN}@huggingface.co/shababdd11/sultan-models
-          
+          git clone https://shababdd11:${HF_TOKEN}@huggingface.co/shababdd11/sultan-models
           cd sultan-models
           
           echo "========================================="
-          echo "🌳 هيكل النماذج في المستودع:"
+          echo "📥 Downloading missing models"
           echo "========================================="
-          find . -type f \( -name "*.safetensors" -o -name "*.bin" -o -name "*.ckpt" -o -name "*.pth" -o -name "*.pt" -o -name "*.onnx" \) 2>/dev/null | sed 's|^\./||' | head -50
+          
+          mkdir -p facexlib/weights
+          
+          echo "Downloading detection_Resnet50_Final.pth..."
+          wget -q --show-progress -O facexlib/weights/detection_Resnet50_Final.pth \
+            https://github.com/xinntao/facexlib/releases/download/v0.1.0/detection_Resnet50_Final.pth
+          
+          echo "Downloading parsing_parsenet.pth..."
+          wget -q --show-progress -O facexlib/weights/parsing_parsenet.pth \
+            https://github.com/xinntao/facexlib/releases/download/v0.2.2/parsing_parsenet.pth
+          
+          echo "Downloading vgg16.pth..."
+          wget -q --show-progress -O facexlib/weights/vgg16.pth \
+            https://github.com/xinntao/facexlib/releases/download/v0.1.0/vgg16.pth
           
           echo ""
-          echo "========================================="
-          echo "🔍 البحث عن النماذج المفقودة (facexlib):"
-          echo "========================================="
+          echo "Files downloaded:"
+          ls -lh facexlib/weights/
           
-          MISSING_MODELS=(
-            "detection_Resnet50_Final.pth"
-            "parsing_parsenet.pth"
-            "vgg16.pth"
-          )
-          
-          for model in "${MISSING_MODELS[@]}"; do
-            echo ""
-            if find . -type f -name "$model" 2>/dev/null | grep -q .; then
-              echo "✅ $model -> موجود"
-              find . -type f -name "$model" -exec ls -lh {} \;
-            else
-              echo "❌ $model -> غير موجود في المستودع"
-              echo "   ⚠️ هذا النموذج سيتم تحميله من الإنترنت أثناء التشغيل"
-            fi
-          done
+          git add facexlib/
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git commit -m "Add missing facexlib models" || echo "No changes"
+          git push
           
           echo ""
-          echo "========================================="
-          echo "📊 إحصائيات النماذج:"
-          echo "========================================="
-          
-          echo "ملفات ONNX: $(find . -name "*.onnx" 2>/dev/null | wc -l)"
-          echo "ملفات PyTorch (.pth, .pt): $(find . -name "*.pth" -o -name "*.pt" 2>/dev/null | wc -l)"
-          echo "ملفات SAFETENSORS: $(find . -name "*.safetensors" 2>/dev/null | wc -l)"
-          echo "ملفات BIN: $(find . -name "*.bin" 2>/dev/null | wc -l)"
-          echo "ملفات CKPT: $(find . -name "*.ckpt" 2>/dev/null | wc -l)"
-          
-          echo ""
-          echo "========================================="
-          echo "💾 هيكل المجلدات:"
-          echo "========================================="
-          ls -la
+          echo "Upload completed successfully!"
