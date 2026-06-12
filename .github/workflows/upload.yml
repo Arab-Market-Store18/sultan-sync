@@ -1,52 +1,34 @@
-name: Upload Missing Models
+name: Download vgg16.pth
 
 on:
   workflow_dispatch:
 
 jobs:
-  upload-models:
+  download:
     runs-on: ubuntu-latest
     steps:
-      - name: Install git-lfs
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y git-lfs
-          git lfs install
-      
-      - name: Clone and upload models
+      - name: Clone and download
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           git clone https://shababdd11:${HF_TOKEN}@huggingface.co/shababdd11/sultan-models
           cd sultan-models
           
-          echo "========================================="
-          echo "📥 Downloading missing models"
-          echo "========================================="
-          
+          echo "📁 Creating facexlib/weights/..."
           mkdir -p facexlib/weights
           
-          echo "Downloading detection_Resnet50_Final.pth..."
-          wget -q --show-progress -O facexlib/weights/detection_Resnet50_Final.pth \
-            https://github.com/xinntao/facexlib/releases/download/v0.1.0/detection_Resnet50_Final.pth
-          
-          echo "Downloading parsing_parsenet.pth..."
-          wget -q --show-progress -O facexlib/weights/parsing_parsenet.pth \
-            https://github.com/xinntao/facexlib/releases/download/v0.2.2/parsing_parsenet.pth
-          
-          echo "Downloading vgg16.pth..."
-          wget -q --show-progress -O facexlib/weights/vgg16.pth \
+          echo "📥 Downloading vgg16.pth (500 MB)..."
+          curl -L --retry 5 --retry-delay 10 \
+            -o facexlib/weights/vgg16.pth \
             https://github.com/xinntao/facexlib/releases/download/v0.1.0/vgg16.pth
           
-          echo ""
-          echo "Files downloaded:"
+          echo "✅ Download complete"
           ls -lh facexlib/weights/
           
           git add facexlib/
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
-          git commit -m "Add missing facexlib models" || echo "No changes"
+          git commit -m "Add vgg16.pth" || echo "No changes"
           git push
           
-          echo ""
-          echo "Upload completed successfully!"
+          echo "🎉 Upload complete!"
