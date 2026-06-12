@@ -7,24 +7,32 @@ jobs:
   show-tree:
     runs-on: ubuntu-latest
     steps:
-      - name: Clone and show tree
+      - name: Install git-lfs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git-lfs
+          git lfs install
+      
+      - name: Clone repository without LFS filters
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git clone --depth 1 --filter=blob:none \
+          # استنساخ بدون استخدام مرشحات LFS (GIT_LFS_SKIP_SMUDGE)
+          GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 \
             https://shababdd11:${HF_TOKEN}@huggingface.co/shababdd11/sultan-models
+          
+          cd sultan-models
           
           echo "========================================="
           echo "🌳 هيكل النماذج في المستودع:"
           echo "========================================="
-          find . -type f \( -name "*.safetensors" -o -name "*.bin" -o -name "*.ckpt" -o -name "*.pth" -o -name "*.pt" -o -name "*.onnx" \) | sed 's|[^/]*/| |g' | head -50
+          find . -type f \( -name "*.safetensors" -o -name "*.bin" -o -name "*.ckpt" -o -name "*.pth" -o -name "*.pt" -o -name "*.onnx" \) 2>/dev/null | sed 's|^\./||' | head -50
           
           echo ""
           echo "========================================="
           echo "🔍 البحث عن النماذج المفقودة (facexlib):"
           echo "========================================="
           
-          # النماذج المفقودة التي تبحث عنها
           MISSING_MODELS=(
             "detection_Resnet50_Final.pth"
             "parsing_parsenet.pth"
@@ -47,15 +55,14 @@ jobs:
           echo "📊 إحصائيات النماذج:"
           echo "========================================="
           
-          # إحصائيات عن أنواع الملفات
-          echo "ملفات ONNX: $(find . -name "*.onnx" | wc -l)"
-          echo "ملفات PyTorch (.pth, .pt): $(find . -name "*.pth" -o -name "*.pt" | wc -l)"
-          echo "ملفات SAFETENSORS: $(find . -name "*.safetensors" | wc -l)"
-          echo "ملفات BIN: $(find . -name "*.bin" | wc -l)"
-          echo "ملفات CKPT: $(find . -name "*.ckpt" | wc -l)"
+          echo "ملفات ONNX: $(find . -name "*.onnx" 2>/dev/null | wc -l)"
+          echo "ملفات PyTorch (.pth, .pt): $(find . -name "*.pth" -o -name "*.pt" 2>/dev/null | wc -l)"
+          echo "ملفات SAFETENSORS: $(find . -name "*.safetensors" 2>/dev/null | wc -l)"
+          echo "ملفات BIN: $(find . -name "*.bin" 2>/dev/null | wc -l)"
+          echo "ملفات CKPT: $(find . -name "*.ckpt" 2>/dev/null | wc -l)"
           
           echo ""
           echo "========================================="
-          echo "💾 إجمالي حجم النماذج المقدر:"
+          echo "💾 هيكل المجلدات:"
           echo "========================================="
-          du -sh . || echo "لا يمكن حساب الحجم"
+          ls -la
