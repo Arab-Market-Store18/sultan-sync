@@ -1,4 +1,5 @@
-name: Show Model Tree Structure
+name: Show Model Tree
+
 on:
   workflow_dispatch:
 
@@ -11,9 +12,50 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           git clone --depth 1 --filter=blob:none \
-            https://shababdd11:${HF_TOKEN}@huggingface.co/shababdd11/sultan-comfy-env
-          cd sultan-comfy-env
+            https://shababdd11:${HF_TOKEN}@huggingface.co/shababdd11/sultan-models
+          
           echo "========================================="
-          echo "🌳 هيكل النماذج:"
+          echo "🌳 هيكل النماذج في المستودع:"
           echo "========================================="
-          find . -type f -name "*.safetensors" -o -name "*.bin" -o -name "*.ckpt" | sed 's|[^/]*/| |g'
+          find . -type f \( -name "*.safetensors" -o -name "*.bin" -o -name "*.ckpt" -o -name "*.pth" -o -name "*.pt" -o -name "*.onnx" \) | sed 's|[^/]*/| |g' | head -50
+          
+          echo ""
+          echo "========================================="
+          echo "🔍 البحث عن النماذج المفقودة (facexlib):"
+          echo "========================================="
+          
+          # النماذج المفقودة التي تبحث عنها
+          MISSING_MODELS=(
+            "detection_Resnet50_Final.pth"
+            "parsing_parsenet.pth"
+            "vgg16.pth"
+          )
+          
+          for model in "${MISSING_MODELS[@]}"; do
+            echo ""
+            if find . -type f -name "$model" 2>/dev/null | grep -q .; then
+              echo "✅ $model -> موجود"
+              find . -type f -name "$model" -exec ls -lh {} \;
+            else
+              echo "❌ $model -> غير موجود في المستودع"
+              echo "   ⚠️ هذا النموذج سيتم تحميله من الإنترنت أثناء التشغيل"
+            fi
+          done
+          
+          echo ""
+          echo "========================================="
+          echo "📊 إحصائيات النماذج:"
+          echo "========================================="
+          
+          # إحصائيات عن أنواع الملفات
+          echo "ملفات ONNX: $(find . -name "*.onnx" | wc -l)"
+          echo "ملفات PyTorch (.pth, .pt): $(find . -name "*.pth" -o -name "*.pt" | wc -l)"
+          echo "ملفات SAFETENSORS: $(find . -name "*.safetensors" | wc -l)"
+          echo "ملفات BIN: $(find . -name "*.bin" | wc -l)"
+          echo "ملفات CKPT: $(find . -name "*.ckpt" | wc -l)"
+          
+          echo ""
+          echo "========================================="
+          echo "💾 إجمالي حجم النماذج المقدر:"
+          echo "========================================="
+          du -sh . || echo "لا يمكن حساب الحجم"
