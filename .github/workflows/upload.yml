@@ -7,22 +7,36 @@ jobs:
   download:
     runs-on: ubuntu-latest
     steps:
-      - name: Clone and download
+      - name: Clone repository
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           git clone https://shababdd11:${HF_TOKEN}@huggingface.co/shababdd11/sultan-models
           cd sultan-models
           
-          echo "📁 Creating facexlib/weights/..."
+          # حذف الملف التالف إذا كان موجوداً
+          rm -f facexlib/weights/vgg16.pth
+          
+          # إنشاء المجلد
           mkdir -p facexlib/weights
           
           echo "📥 Downloading vgg16.pth (500 MB)..."
-          curl -L --retry 5 --retry-delay 10 \
-            -o facexlib/weights/vgg16.pth \
+          
+          # استخدام wget مع إعادة المحاولة
+          wget --tries=5 --timeout=60 --continue \
+            -O facexlib/weights/vgg16.pth \
             https://github.com/xinntao/facexlib/releases/download/v0.1.0/vgg16.pth
           
-          echo "✅ Download complete"
+          # التحقق من الحجم
+          SIZE=$(stat -c%s facexlib/weights/vgg16.pth 2>/dev/null || echo "0")
+          echo "File size: $SIZE bytes"
+          
+          if [ "$SIZE" -lt 400000000 ]; then
+            echo "❌ Download failed - file too small ($SIZE bytes)"
+            exit 1
+          fi
+          
+          echo "✅ Download successful!"
           ls -lh facexlib/weights/
           
           git add facexlib/
