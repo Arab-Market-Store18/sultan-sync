@@ -15,44 +15,56 @@ jobs:
           cd sultan-models
           
           echo "========================================="
-          echo "📥 تحميل نماذج facexlib"
+          echo "📥 تحميل نماذج facexlib (الروابط الرسمية 2025-2026)"
           echo "========================================="
           
           # إنشاء المجلد
           mkdir -p facexlib/weights
           
           # 1. تحميل detection_Resnet50_Final.pth (~109 MB)
-          echo "📥 تحميل detection_Resnet50_Final.pth..."
+          echo "📥 [1/3] تحميل detection_Resnet50_Final.pth (109 MB)..."
           wget -q --show-progress \
             -O facexlib/weights/detection_Resnet50_Final.pth \
             https://github.com/xinntao/facexlib/releases/download/v0.1.0/detection_Resnet50_Final.pth
           
+          echo "   ✅ تم التحميل - الحجم: $(du -h facexlib/weights/detection_Resnet50_Final.pth | cut -f1)"
+          
           # 2. تحميل parsing_parsenet.pth (~85 MB)
-          echo "📥 تحميل parsing_parsenet.pth..."
+          echo "📥 [2/3] تحميل parsing_parsenet.pth (85 MB)..."
           wget -q --show-progress \
             -O facexlib/weights/parsing_parsenet.pth \
             https://github.com/xinntao/facexlib/releases/download/v0.2.2/parsing_parsenet.pth
           
-          # 3. تحميل vgg16.pth (~500 MB)
-          echo "📥 تحميل vgg16.pth..."
+          echo "   ✅ تم التحميل - الحجم: $(du -h facexlib/weights/parsing_parsenet.pth | cut -f1)"
+          
+          # 3. تحميل vgg16.pth (~528 MB)
+          echo "📥 [3/3] تحميل vgg16.pth (528 MB)..."
           wget -q --show-progress \
             -O facexlib/weights/vgg16.pth \
-            https://github.com/xinntao/facexlib/releases/download/v0.1.0/vgg16.pth
+            https://download.pytorch.org/models/vgg16-397923af.pth
+          
+          echo "   ✅ تم التحميل - الحجم: $(du -h facexlib/weights/vgg16.pth | cut -f1)"
           
           echo ""
           echo "========================================="
-          echo "✅ تم التحميل بنجاح"
+          echo "📋 ملخص التحميل:"
           echo "========================================="
-          
-          # التحقق من الملفات
           ls -lh facexlib/weights/
+          
+          echo ""
+          echo "========================================="
+          echo "✅ تم تحميل جميع النماذج بنجاح"
+          echo "========================================="
           
           # رفع إلى Hugging Face
           git add facexlib/
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
-          git commit -m "Add facexlib models (detection, parsing, vgg16)" || echo "No changes"
+          git commit -m "Add facexlib models from official sources"
+          
+          echo "🚀 جاري الدفع إلى Hugging Face..."
           git push
           
           echo ""
-          echo "🎉 تم رفع النماذج بنجاح!"
+          echo "🎉 تم رفع النماذج بنجاح إلى:"
+          echo "   https://huggingface.co/shababdd11/sultan-models/tree/main/facexlib/weights"
