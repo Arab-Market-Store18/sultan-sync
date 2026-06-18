@@ -1,6 +1,6 @@
-herename: Download LaMa Inpainting Model
+name: Download LaMa Inpainting Model
 
-on: 
+on:
   workflow_dispatch:
 
 jobs:
