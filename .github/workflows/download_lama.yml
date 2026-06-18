@@ -1,54 +1,33 @@
-name: Download LaMa Inpainting Model
+name: Upload LaMa Model Only
 
 on:
   workflow_dispatch:
 
 jobs:
-  download:
+  upload:
     runs-on: ubuntu-latest
     steps:
-      - name: Clone repository
+      - name: Download LaMa Model
+        run: |
+          echo "📥 تحميل نموذج LaMa..."
+          wget -q --show-progress \
+            -O lama_fp32.onnx \
+            https://huggingface.co/SHI-Labs/LaMa-ONNX/resolve/main/models/lama_fp32.onnx
+          
+          echo "✅ تم التحميل - الحجم: $(du -h lama_fp32.onnx | cut -f1)"
+          
+      - name: Upload to Hugging Face
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git clone https://shababdd11:${HF_TOKEN}@huggingface.co/shababdd11/sultan-models
-          cd sultan-models
+          echo "🚀 رفع النموذج إلى Hugging Face..."
           
-          echo "========================================="
-          echo "📥 تحميل نموذج LaMa Inpainting"
-          echo "========================================="
-          
-          # إنشاء المجلد
-          mkdir -p inpainting
-          
-          # تحميل lama_fp32.onnx (~200 MB)
-          echo "📥 [1/1] تحميل lama_fp32.onnx (200 MB)..."
-          wget -q --show-progress \
-            -O inpainting/lama_fp32.onnx \
-            https://huggingface.co/SHI-Labs/LaMa-ONNX/resolve/main/models/lama_fp32.onnx
-          
-          echo "   ✅ تم التحميل - الحجم: $(du -h inpainting/lama_fp32.onnx | cut -f1)"
+          curl -X POST \
+            -H "Authorization: Bearer $HF_TOKEN" \
+            -F "file=@lama_fp32.onnx" \
+            -F "path=inpainting/lama_fp32.onnx" \
+            https://huggingface.co/api/models/shababdd11/sultan-models/upload
           
           echo ""
-          echo "========================================="
-          echo "📋 ملخص التحميل:"
-          echo "========================================="
-          ls -lh inpainting/
-          
-          echo ""
-          echo "========================================="
-          echo "✅ تم تحميل النموذج بنجاح"
-          echo "========================================="
-          
-          # رفع إلى Hugging Face
-          git add inpainting/
-          git config user.email "actions@github.com"
-          git config user.name "GitHub Actions"
-          git commit -m "Add LaMa inpainting model (lama_fp32.onnx)"
-          
-          echo "🚀 جاري الدفع إلى Hugging Face..."
-          git push
-          
-          echo ""
-          echo "🎉 تم رفع النموذج بنجاح إلى:"
-          echo "   https://huggingface.co/shababdd11/sultan-models/tree/main/inpainting"
+          echo "✅ تم الرفع بنجاح!"
+          echo "🔗 https://huggingface.co/shababdd11/sultan-models/blob/main/inpainting/lama_fp32.onnx"
