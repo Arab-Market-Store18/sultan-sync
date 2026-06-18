@@ -1,4 +1,4 @@
-name: Download facexlib Models
+name: Download LaMa Inpainting Model
 
 on:
   workflow_dispatch:
@@ -15,56 +15,40 @@ jobs:
           cd sultan-models
           
           echo "========================================="
-          echo "📥 تحميل نماذج facexlib (الروابط الرسمية 2025-2026)"
+          echo "📥 تحميل نموذج LaMa Inpainting"
           echo "========================================="
           
           # إنشاء المجلد
-          mkdir -p facexlib/weights
+          mkdir -p inpainting
           
-          # 1. تحميل detection_Resnet50_Final.pth (~109 MB)
-          echo "📥 [1/3] تحميل detection_Resnet50_Final.pth (109 MB)..."
+          # تحميل lama_fp32.onnx (~ 200 MB)
+          echo "📥 تحميل lama_fp32.onnx (200 MB)..."
           wget -q --show-progress \
-            -O facexlib/weights/detection_Resnet50_Final.pth \
-            https://github.com/xinntao/facexlib/releases/download/v0.1.0/detection_Resnet50_Final.pth
+            -O inpainting/lama_fp32.onnx \
+            https://huggingface.co/SHI-Labs/LaMa-ONNX/resolve/main/models/lama_fp32.onnx
           
-          echo "   ✅ تم التحميل - الحجم: $(du -h facexlib/weights/detection_Resnet50_Final.pth | cut -f1)"
-          
-          # 2. تحميل parsing_parsenet.pth (~85 MB)
-          echo "📥 [2/3] تحميل parsing_parsenet.pth (85 MB)..."
-          wget -q --show-progress \
-            -O facexlib/weights/parsing_parsenet.pth \
-            https://github.com/xinntao/facexlib/releases/download/v0.2.2/parsing_parsenet.pth
-          
-          echo "   ✅ تم التحميل - الحجم: $(du -h facexlib/weights/parsing_parsenet.pth | cut -f1)"
-          
-          # 3. تحميل vgg16.pth (~528 MB)
-          echo "📥 [3/3] تحميل vgg16.pth (528 MB)..."
-          wget -q --show-progress \
-            -O facexlib/weights/vgg16.pth \
-            https://download.pytorch.org/models/vgg16-397923af.pth
-          
-          echo "   ✅ تم التحميل - الحجم: $(du -h facexlib/weights/vgg16.pth | cut -f1)"
+          echo "   ✅ تم التحميل - الحجم: $(du -h inpainting/lama_fp32.onnx | cut -f1)"
           
           echo ""
           echo "========================================="
           echo "📋 ملخص التحميل:"
           echo "========================================="
-          ls -lh facexlib/weights/
+          ls -lh inpainting/
           
           echo ""
           echo "========================================="
-          echo "✅ تم تحميل جميع النماذج بنجاح"
+          echo "✅ تم تحميل النموذج بنجاح"
           echo "========================================="
           
           # رفع إلى Hugging Face
-          git add facexlib/
+          git add inpainting/
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
-          git commit -m "Add facexlib models from official sources"
+          git commit -m "Add LaMa inpainting model (lama_fp32.onnx)"
           
           echo "🚀 جاري الدفع إلى Hugging Face..."
           git push
           
           echo ""
-          echo "🎉 تم رفع النماذج بنجاح إلى:"
-          echo "   https://huggingface.co/shababdd11/sultan-models/tree/main/facexlib/weights"
+          echo "🎉 تم رفع النموذج بنجاح إلى:"
+          echo "   https://huggingface.co/shababdd11/sultan-models/tree/main/inpainting"
