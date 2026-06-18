@@ -1,54 +1,71 @@
-name: Download LaMa Inpainting Model
+name: Upload LaMa Model to Hugging Face
 
 on:
   workflow_dispatch:
 
 jobs:
-  download:
+  upload:
     runs-on: ubuntu-latest
     steps:
-      - name: Clone repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          
+      - name: Install Hugging Face Hub
+        run: |
+          pip install huggingface-hub
+          
+      - name: Download and Upload LaMa Model
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git clone https://shababdd11:${HF_TOKEN}@huggingface.co/shababdd11/sultan-models
-          cd sultan-models
-          
           echo "========================================="
           echo "📥 تحميل نموذج LaMa Inpainting"
           echo "========================================="
           
-          # إنشاء المجلد
-          mkdir -p inpainting
+          # إنشاء مجلد مؤقت
+          mkdir -p temp_inpainting
           
-          # تحميل lama_fp32.onnx (~ 200 MB)
+          # تحميل النموذج
           echo "📥 تحميل lama_fp32.onnx (200 MB)..."
           wget -q --show-progress \
-            -O inpainting/lama_fp32.onnx \
+            -O temp_inpainting/lama_fp32.onnx \
             https://huggingface.co/SHI-Labs/LaMa-ONNX/resolve/main/models/lama_fp32.onnx
           
-          echo "   ✅ تم التحميل - الحجم: $(du -h inpainting/lama_fp32.onnx | cut -f1)"
+          echo "   ✅ تم التحميل - الحجم: $(du -h temp_inpainting/lama_fp32.onnx | cut -f1)"
           
           echo ""
           echo "========================================="
-          echo "📋 ملخص التحميل:"
+          echo "🚀 رفع النموذج إلى Hugging Face"
           echo "========================================="
-          ls -lh inpainting/
+          
+          # رفع الملف مباشرة باستخدام huggingface-hub
+          python3 << EOF
+          from huggingface_hub import HfApi, upload_file
+          import os
+          
+          api = HfApi()
+          token = os.environ.get("HF_TOKEN")
+          
+          # رفع الملف
+          upload_file(
+              path_or_fileobj="temp_inpainting/lama_fp32.onnx",
+              path_in_repo="inpainting/lama_fp32.onnx",
+              repo_id="shababdd11/sultan-models",
+              token=token,
+              repo_type="model"
+          )
+          
+          print("✅ تم رفع النموذج بنجاح")
+          EOF
           
           echo ""
           echo "========================================="
-          echo "✅ تم تحميل النموذج بنجاح"
+          echo "✅ اكتمل الرفع بنجاح!"
           echo "========================================="
-          
-          # رفع إلى Hugging Face
-          git add inpainting/
-          git config user.email "actions@github.com"
-          git config user.name "GitHub Actions"
-          git commit -m "Add LaMa inpainting model (lama_fp32.onnx)"
-          
-          echo "🚀 جاري الدفع إلى Hugging Face..."
-          git push
-          
-          echo ""
-          echo "🎉 تم رفع النموذج بنجاح إلى:"
-          echo "   https://huggingface.co/shababdd11/sultan-models/tree/main/inpainting"
+          echo "🔗 رابط النموذج:"
+          echo "   https://huggingface.co/shababdd11/sultan-models/blob/main/inpainting/lama_fp32.onnx"
