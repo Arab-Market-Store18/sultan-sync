@@ -1,172 +1,75 @@
-name: Show All Files and Folders in sultan-models
+name: Download YOLOv5l-face Model
 
 on:
   workflow_dispatch:
 
 jobs:
-  show-all:
+  download:
     runs-on: ubuntu-latest
     steps:
-      - name: List everything in sultan-models
+      - name: Clone repository
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          echo "========================================="
-          echo "📂 عرض كل المجلدات والملفات في sultan-models"
-          echo "========================================="
-          
-          # ==========================================
-          # استنساخ المستودع
-          # ==========================================
-          echo ""
-          echo "📥 جاري استنساخ المستودع..."
           git clone https://shababdd11:${HF_TOKEN}@huggingface.co/shababdd11/sultan-models
           cd sultan-models
           
-          echo "✅ تم استنساخ المستودع"
-          echo "📂 المجلد الحالي: $(pwd)"
+          echo "========================================="
+          echo "📥 تحميل نموذج YOLOv5l-face"
+          echo "========================================="
           
           # ==========================================
-          # 1. عرض كل شيء (مفصل)
+          # إنشاء المجلد
+          # ==========================================
+          mkdir -p detection
+          
+          # ==========================================
+          # تحميل yolov5l-face.pth (187 MB)
           # ==========================================
           echo ""
-          echo "========================================="
-          echo "📂 1. عرض كل الملفات والمجلدات (مفصل):"
-          echo "========================================="
-          echo ""
+          echo "📥 تحميل yolov5l-face.pth (187 MB)..."
+          wget -q --show-progress \
+            -O detection/yolov5l-face.pth \
+            https://huggingface.co/martintomov/comfy/resolve/main/facedetection/yolov5l-face.pth
           
-          # عرض كل شيء مع التفاصيل
-          ls -laR --color=always
-          
-          # ==========================================
-          # 2. عرض المجلدات فقط (مع المسارات)
-          # ==========================================
-          echo ""
-          echo "========================================="
-          echo "📁 2. المجلدات فقط:"
-          echo "========================================="
-          echo ""
-          
-          find . -type d | sort | sed 's|^\./||' | grep -v '^\.git$' | grep -v '^\.git/'
+          echo "   ✅ تم التحميل - الحجم: $(du -h detection/yolov5l-face.pth | cut -f1)"
           
           # ==========================================
-          # 3. عرض الملفات فقط (مع المسارات)
+          # عرض الملخص
           # ==========================================
           echo ""
           echo "========================================="
-          echo "📄 3. الملفات فقط:"
+          echo "📋 ملخص التحميل:"
           echo "========================================="
           echo ""
+          echo "📂 detection/"
+          ls -lh detection/
           
-          find . -type f | sort | sed 's|^\./||' | grep -v '^\.git/'
+          echo ""
+          echo "========================================="
+          echo "✅ تم تحميل النموذج بنجاح"
+          echo "========================================="
+          echo ""
+          echo "📋 النموذج المحمل:"
+          echo "  📄 detection/yolov5l-face.pth"
           
           # ==========================================
-          # 4. عرض هيكل الشجرة (Tree)
+          # رفع إلى Hugging Face
           # ==========================================
           echo ""
-          echo "========================================="
-          echo "🌳 4. هيكل الشجرة:"
-          echo "========================================="
-          echo ""
+          echo "🚀 جاري الدفع إلى Hugging Face..."
           
-          # تثبيت tree إذا لم يكن موجوداً
-          apt-get update -qq && apt-get install -y -qq tree 2>/dev/null
-          tree -a -h --du
+          git add detection/
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git commit -m "Add YOLOv5l-face detection model"
           
-          # ==========================================
-          # 5. عرض أحجام كل ملف
-          # ==========================================
-          echo ""
-          echo "========================================="
-          echo "📊 5. أحجام جميع الملفات:"
-          echo "========================================="
-          echo ""
-          
-          find . -type f -not -path "./.git/*" -exec ls -lh {} \; 2>/dev/null | awk '{print $9 " - " $5}'
-          
-          # ==========================================
-          # 6. عرض حجم كل مجلد
-          # ==========================================
-          echo ""
-          echo "========================================="
-          echo "📊 6. حجم كل مجلد:"
-          echo "========================================="
-          echo ""
-          
-          du -sh * 2>/dev/null | sort -hr
-          
-          # ==========================================
-          # 7. عرض الملفات حسب النوع
-          # ==========================================
-          echo ""
-          echo "========================================="
-          echo "📊 7. الملفات حسب النوع:"
-          echo "========================================="
-          echo ""
-          
-          echo "🔹 ملفات ONNX:"
-          find . -type f -name "*.onnx" | wc -l
-          find . -type f -name "*.onnx" -exec ls -lh {} \; 2>/dev/null | awk '{print "  " $9 " - " $5}'
+          git push
           
           echo ""
-          echo "🔹 ملفات ZIP:"
-          find . -type f -name "*.zip" | wc -l
-          find . -type f -name "*.zip" -exec ls -lh {} \; 2>/dev/null | awk '{print "  " $9 " - " $5}'
-          
+          echo "🎉 تم رفع النموذج بنجاح إلى:"
+          echo "   https://huggingface.co/shababdd11/sultan-models/tree/main/detection"
           echo ""
-          echo "🔹 ملفات أخرى:"
-          find . -type f -not -name "*.onnx" -not -name "*.zip" -not -path "./.git/*" | wc -l
-          
-          # ==========================================
-          # 8. إحصائيات كاملة
-          # ==========================================
-          echo ""
-          echo "========================================="
-          echo "📊 8. إحصائيات المستودع:"
-          echo "========================================="
-          echo ""
-          
-          # عدد الملفات (باستثناء .git)
-          TOTAL_FILES=$(find . -type f -not -path "./.git/*" | wc -l)
-          echo "📄 عدد الملفات: $TOTAL_FILES"
-          
-          # عدد المجلدات (باستثناء .git)
-          TOTAL_DIRS=$(find . -type d -not -path "./.git/*" | wc -l)
-          echo "📁 عدد المجلدات: $TOTAL_DIRS"
-          
-          # الحجم الإجمالي
-          TOTAL_SIZE=$(du -sh . 2>/dev/null | cut -f1)
-          echo "💾 الحجم الإجمالي: $TOTAL_SIZE"
-          
-          # عدد ملفات ONNX
-          ONNX_FILES=$(find . -type f -name "*.onnx" | wc -l)
-          echo "🧠 عدد نماذج ONNX: $ONNX_FILES"
-          
-          # عدد ملفات ZIP
-          ZIP_FILES=$(find . -type f -name "*.zip" | wc -l)
-          echo "📦 عدد ملفات ZIP: $ZIP_FILES"
-          
-          # ==========================================
-          # 9. عرض المسار الكامل لكل ملف
-          # ==========================================
-          echo ""
-          echo "========================================="
-          echo "🗺️ 9. المسارات الكاملة لجميع الملفات:"
-          echo "========================================="
-          echo ""
-          
-          find . -type f -not -path "./.git/*" | sed 's|^\./||' | while read file; do
-            echo "  /app/sultan-models/$file"
-          done
-          
-          # ==========================================
-          # 10. رابط المستودع
-          # ==========================================
-          echo ""
-          echo "========================================="
-          echo "🔗 10. رابط المستودع:"
-          echo "========================================="
-          echo ""
-          echo "https://huggingface.co/shababdd11/sultan-models"
-          echo ""
-          echo "✅ تم عرض كل الملفات والمجلدات بنجاح!"
+          echo "📂 هيكل المجلدات:"
+          echo "   detection/"
+          echo "   └── yolov5l-face.pth"
