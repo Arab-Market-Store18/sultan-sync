@@ -1,4 +1,4 @@
-name: Download LaMa Model
+name: Download Face Swap Models
 
 on:
   workflow_dispatch:
@@ -15,40 +15,112 @@ jobs:
           cd sultan-models
           
           echo "========================================="
-          echo "📥 تحميل نموذج LaMa Inpainting"
+          echo "📥 تحميل نماذج Face Swap"
           echo "========================================="
           
-          # إنشاء المجلد
-          mkdir -p inpainting
+          # ==========================================
+          # إنشاء المجلدات
+          # ==========================================
+          mkdir -p models
+          mkdir -p models/hyperswap
           
-          # تحميل lama_fp32.onnx (200 MB)
-          echo "📥 [1/1] تحميل lama_fp32.onnx (200 MB)..."
+          # ==========================================
+          # 1. تحميل GPEN-BFR-512.onnx (284 MB)
+          # ==========================================
+          echo ""
+          echo "📥 [1/4] تحميل GPEN-BFR-512.onnx (284 MB)..."
           wget -q --show-progress \
-            -O inpainting/lama_fp32.onnx \
-            https://huggingface.co/Carve/LaMa-ONNX/resolve/main/lama_fp32.onnx
+            -O models/GPEN-BFR-512.onnx \
+            https://huggingface.co/martintomov/comfy/resolve/main/facerestore_models/GPEN-BFR-512.onnx
           
-          echo "   ✅ تم التحميل - الحجم: $(du -h inpainting/lama_fp32.onnx | cut -f1)"
+          echo "   ✅ تم التحميل - الحجم: $(du -h models/GPEN-BFR-512.onnx | cut -f1)"
           
+          # ==========================================
+          # 2. تحميل hyperswap_1a_256.onnx (403 MB)
+          # ==========================================
+          echo ""
+          echo "📥 [2/4] تحميل hyperswap_1a_256.onnx (403 MB)..."
+          wget -q --show-progress \
+            -O models/hyperswap/hyperswap_1a_256.onnx \
+            https://huggingface.co/facefusion/models-3.3.0/resolve/main/hyperswap_1a_256.onnx
+          
+          echo "   ✅ تم التحميل - الحجم: $(du -h models/hyperswap/hyperswap_1a_256.onnx | cut -f1)"
+          
+          # ==========================================
+          # 3. تحميل hyperswap_1b_256.onnx (403 MB)
+          # ==========================================
+          echo ""
+          echo "📥 [3/4] تحميل hyperswap_1b_256.onnx (403 MB)..."
+          wget -q --show-progress \
+            -O models/hyperswap/hyperswap_1b_256.onnx \
+            https://huggingface.co/facefusion/models-3.3.0/resolve/main/hyperswap_1b_256.onnx
+          
+          echo "   ✅ تم التحميل - الحجم: $(du -h models/hyperswap/hyperswap_1b_256.onnx | cut -f1)"
+          
+          # ==========================================
+          # 4. تحميل hyperswap_1c_256.onnx (403 MB)
+          # ==========================================
+          echo ""
+          echo "📥 [4/4] تحميل hyperswap_1c_256.onnx (403 MB)..."
+          wget -q --show-progress \
+            -O models/hyperswap/hyperswap_1c_256.onnx \
+            https://huggingface.co/facefusion/models-3.3.0/resolve/main/hyperswap_1c_256.onnx
+          
+          echo "   ✅ تم التحميل - الحجم: $(du -h models/hyperswap/hyperswap_1c_256.onnx | cut -f1)"
+          
+          # ==========================================
+          # عرض الملخص
+          # ==========================================
           echo ""
           echo "========================================="
           echo "📋 ملخص التحميل:"
           echo "========================================="
-          ls -lh inpainting/
+          echo ""
+          echo "📂 models/"
+          ls -lh models/
+          echo ""
+          echo "📂 models/hyperswap/"
+          ls -lh models/hyperswap/
+          
+          # ==========================================
+          # حساب الحجم الإجمالي
+          # ==========================================
+          TOTAL_SIZE=$(du -sh models/ | cut -f1)
+          echo ""
+          echo "💾 الحجم الإجمالي: $TOTAL_SIZE"
           
           echo ""
           echo "========================================="
-          echo "✅ تم تحميل النموذج بنجاح"
+          echo "✅ تم تحميل 4 نماذج بنجاح"
           echo "========================================="
+          echo ""
+          echo "📋 النماذج المحملة:"
+          echo "  1. models/GPEN-BFR-512.onnx"
+          echo "  2. models/hyperswap/hyperswap_1a_256.onnx"
+          echo "  3. models/hyperswap/hyperswap_1b_256.onnx"
+          echo "  4. models/hyperswap/hyperswap_1c_256.onnx"
           
+          # ==========================================
           # رفع إلى Hugging Face
-          git add inpainting/
+          # ==========================================
+          echo ""
+          echo "🚀 جاري الدفع إلى Hugging Face..."
+          
+          git add models/
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
-          git commit -m "Add LaMa inpainting model (lama_fp32.onnx)"
+          git commit -m "Add Face Swap models (GPEN + 3 Hyperswap)"
           
-          echo "🚀 جاري الدفع إلى Hugging Face..."
           git push
           
           echo ""
-          echo "🎉 تم رفع النموذج بنجاح إلى:"
-          echo "   https://huggingface.co/shababdd11/sultan-models/tree/main/inpainting"
+          echo "🎉 تم رفع النماذج بنجاح إلى:"
+          echo "   https://huggingface.co/shababdd11/sultan-models/tree/main/models"
+          echo ""
+          echo "📂 هيكل المجلدات:"
+          echo "   models/"
+          echo "   ├── GPEN-BFR-512.onnx"
+          echo "   └── hyperswap/"
+          echo "       ├── hyperswap_1a_256.onnx"
+          echo "       ├── hyperswap_1b_256.onnx"
+          echo "       └── hyperswap_1c_256.onnx"
