@@ -1,126 +1,172 @@
-name: Download Face Swap Models
+name: Show All Files and Folders in sultan-models
 
 on:
   workflow_dispatch:
 
 jobs:
-  download:
+  show-all:
     runs-on: ubuntu-latest
     steps:
-      - name: Clone repository
+      - name: List everything in sultan-models
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          echo "========================================="
+          echo "📂 عرض كل المجلدات والملفات في sultan-models"
+          echo "========================================="
+          
+          # ==========================================
+          # استنساخ المستودع
+          # ==========================================
+          echo ""
+          echo "📥 جاري استنساخ المستودع..."
           git clone https://shababdd11:${HF_TOKEN}@huggingface.co/shababdd11/sultan-models
           cd sultan-models
           
-          echo "========================================="
-          echo "📥 تحميل نماذج Face Swap"
-          echo "========================================="
+          echo "✅ تم استنساخ المستودع"
+          echo "📂 المجلد الحالي: $(pwd)"
           
           # ==========================================
-          # إنشاء المجلدات
-          # ==========================================
-          mkdir -p models
-          mkdir -p models/hyperswap
-          
-          # ==========================================
-          # 1. تحميل GPEN-BFR-512.onnx (284 MB)
-          # ==========================================
-          echo ""
-          echo "📥 [1/4] تحميل GPEN-BFR-512.onnx (284 MB)..."
-          wget -q --show-progress \
-            -O models/GPEN-BFR-512.onnx \
-            https://huggingface.co/martintomov/comfy/resolve/main/facerestore_models/GPEN-BFR-512.onnx
-          
-          echo "   ✅ تم التحميل - الحجم: $(du -h models/GPEN-BFR-512.onnx | cut -f1)"
-          
-          # ==========================================
-          # 2. تحميل hyperswap_1a_256.onnx (403 MB)
-          # ==========================================
-          echo ""
-          echo "📥 [2/4] تحميل hyperswap_1a_256.onnx (403 MB)..."
-          wget -q --show-progress \
-            -O models/hyperswap/hyperswap_1a_256.onnx \
-            https://huggingface.co/facefusion/models-3.3.0/resolve/main/hyperswap_1a_256.onnx
-          
-          echo "   ✅ تم التحميل - الحجم: $(du -h models/hyperswap/hyperswap_1a_256.onnx | cut -f1)"
-          
-          # ==========================================
-          # 3. تحميل hyperswap_1b_256.onnx (403 MB)
-          # ==========================================
-          echo ""
-          echo "📥 [3/4] تحميل hyperswap_1b_256.onnx (403 MB)..."
-          wget -q --show-progress \
-            -O models/hyperswap/hyperswap_1b_256.onnx \
-            https://huggingface.co/facefusion/models-3.3.0/resolve/main/hyperswap_1b_256.onnx
-          
-          echo "   ✅ تم التحميل - الحجم: $(du -h models/hyperswap/hyperswap_1b_256.onnx | cut -f1)"
-          
-          # ==========================================
-          # 4. تحميل hyperswap_1c_256.onnx (403 MB)
-          # ==========================================
-          echo ""
-          echo "📥 [4/4] تحميل hyperswap_1c_256.onnx (403 MB)..."
-          wget -q --show-progress \
-            -O models/hyperswap/hyperswap_1c_256.onnx \
-            https://huggingface.co/facefusion/models-3.3.0/resolve/main/hyperswap_1c_256.onnx
-          
-          echo "   ✅ تم التحميل - الحجم: $(du -h models/hyperswap/hyperswap_1c_256.onnx | cut -f1)"
-          
-          # ==========================================
-          # عرض الملخص
+          # 1. عرض كل شيء (مفصل)
           # ==========================================
           echo ""
           echo "========================================="
-          echo "📋 ملخص التحميل:"
+          echo "📂 1. عرض كل الملفات والمجلدات (مفصل):"
           echo "========================================="
           echo ""
-          echo "📂 models/"
-          ls -lh models/
-          echo ""
-          echo "📂 models/hyperswap/"
-          ls -lh models/hyperswap/
+          
+          # عرض كل شيء مع التفاصيل
+          ls -laR --color=always
           
           # ==========================================
-          # حساب الحجم الإجمالي
+          # 2. عرض المجلدات فقط (مع المسارات)
           # ==========================================
-          TOTAL_SIZE=$(du -sh models/ | cut -f1)
           echo ""
+          echo "========================================="
+          echo "📁 2. المجلدات فقط:"
+          echo "========================================="
+          echo ""
+          
+          find . -type d | sort | sed 's|^\./||' | grep -v '^\.git$' | grep -v '^\.git/'
+          
+          # ==========================================
+          # 3. عرض الملفات فقط (مع المسارات)
+          # ==========================================
+          echo ""
+          echo "========================================="
+          echo "📄 3. الملفات فقط:"
+          echo "========================================="
+          echo ""
+          
+          find . -type f | sort | sed 's|^\./||' | grep -v '^\.git/'
+          
+          # ==========================================
+          # 4. عرض هيكل الشجرة (Tree)
+          # ==========================================
+          echo ""
+          echo "========================================="
+          echo "🌳 4. هيكل الشجرة:"
+          echo "========================================="
+          echo ""
+          
+          # تثبيت tree إذا لم يكن موجوداً
+          apt-get update -qq && apt-get install -y -qq tree 2>/dev/null
+          tree -a -h --du
+          
+          # ==========================================
+          # 5. عرض أحجام كل ملف
+          # ==========================================
+          echo ""
+          echo "========================================="
+          echo "📊 5. أحجام جميع الملفات:"
+          echo "========================================="
+          echo ""
+          
+          find . -type f -not -path "./.git/*" -exec ls -lh {} \; 2>/dev/null | awk '{print $9 " - " $5}'
+          
+          # ==========================================
+          # 6. عرض حجم كل مجلد
+          # ==========================================
+          echo ""
+          echo "========================================="
+          echo "📊 6. حجم كل مجلد:"
+          echo "========================================="
+          echo ""
+          
+          du -sh * 2>/dev/null | sort -hr
+          
+          # ==========================================
+          # 7. عرض الملفات حسب النوع
+          # ==========================================
+          echo ""
+          echo "========================================="
+          echo "📊 7. الملفات حسب النوع:"
+          echo "========================================="
+          echo ""
+          
+          echo "🔹 ملفات ONNX:"
+          find . -type f -name "*.onnx" | wc -l
+          find . -type f -name "*.onnx" -exec ls -lh {} \; 2>/dev/null | awk '{print "  " $9 " - " $5}'
+          
+          echo ""
+          echo "🔹 ملفات ZIP:"
+          find . -type f -name "*.zip" | wc -l
+          find . -type f -name "*.zip" -exec ls -lh {} \; 2>/dev/null | awk '{print "  " $9 " - " $5}'
+          
+          echo ""
+          echo "🔹 ملفات أخرى:"
+          find . -type f -not -name "*.onnx" -not -name "*.zip" -not -path "./.git/*" | wc -l
+          
+          # ==========================================
+          # 8. إحصائيات كاملة
+          # ==========================================
+          echo ""
+          echo "========================================="
+          echo "📊 8. إحصائيات المستودع:"
+          echo "========================================="
+          echo ""
+          
+          # عدد الملفات (باستثناء .git)
+          TOTAL_FILES=$(find . -type f -not -path "./.git/*" | wc -l)
+          echo "📄 عدد الملفات: $TOTAL_FILES"
+          
+          # عدد المجلدات (باستثناء .git)
+          TOTAL_DIRS=$(find . -type d -not -path "./.git/*" | wc -l)
+          echo "📁 عدد المجلدات: $TOTAL_DIRS"
+          
+          # الحجم الإجمالي
+          TOTAL_SIZE=$(du -sh . 2>/dev/null | cut -f1)
           echo "💾 الحجم الإجمالي: $TOTAL_SIZE"
           
-          echo ""
-          echo "========================================="
-          echo "✅ تم تحميل 4 نماذج بنجاح"
-          echo "========================================="
-          echo ""
-          echo "📋 النماذج المحملة:"
-          echo "  1. models/GPEN-BFR-512.onnx"
-          echo "  2. models/hyperswap/hyperswap_1a_256.onnx"
-          echo "  3. models/hyperswap/hyperswap_1b_256.onnx"
-          echo "  4. models/hyperswap/hyperswap_1c_256.onnx"
+          # عدد ملفات ONNX
+          ONNX_FILES=$(find . -type f -name "*.onnx" | wc -l)
+          echo "🧠 عدد نماذج ONNX: $ONNX_FILES"
+          
+          # عدد ملفات ZIP
+          ZIP_FILES=$(find . -type f -name "*.zip" | wc -l)
+          echo "📦 عدد ملفات ZIP: $ZIP_FILES"
           
           # ==========================================
-          # رفع إلى Hugging Face
+          # 9. عرض المسار الكامل لكل ملف
           # ==========================================
           echo ""
-          echo "🚀 جاري الدفع إلى Hugging Face..."
-          
-          git add models/
-          git config user.email "actions@github.com"
-          git config user.name "GitHub Actions"
-          git commit -m "Add Face Swap models (GPEN + 3 Hyperswap)"
-          
-          git push
-          
+          echo "========================================="
+          echo "🗺️ 9. المسارات الكاملة لجميع الملفات:"
+          echo "========================================="
           echo ""
-          echo "🎉 تم رفع النماذج بنجاح إلى:"
-          echo "   https://huggingface.co/shababdd11/sultan-models/tree/main/models"
+          
+          find . -type f -not -path "./.git/*" | sed 's|^\./||' | while read file; do
+            echo "  /app/sultan-models/$file"
+          done
+          
+          # ==========================================
+          # 10. رابط المستودع
+          # ==========================================
           echo ""
-          echo "📂 هيكل المجلدات:"
-          echo "   models/"
-          echo "   ├── GPEN-BFR-512.onnx"
-          echo "   └── hyperswap/"
-          echo "       ├── hyperswap_1a_256.onnx"
-          echo "       ├── hyperswap_1b_256.onnx"
-          echo "       └── hyperswap_1c_256.onnx"
+          echo "========================================="
+          echo "🔗 10. رابط المستودع:"
+          echo "========================================="
+          echo ""
+          echo "https://huggingface.co/shababdd11/sultan-models"
+          echo ""
+          echo "✅ تم عرض كل الملفات والمجلدات بنجاح!"
